@@ -1,0 +1,12 @@
+1-	NTDSUTIL
+2-	Roles
+3-	Connections
+4-	Connect to server” servername”
+5-	Quit
+6-	Seize PDC
+7-	Seize RID master
+8-	Seize infrastructure master
+9-	Seize schema master
+10-	Seize naming master
+11-	Quit
+12-	Quit
