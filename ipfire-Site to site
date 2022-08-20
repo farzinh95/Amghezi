@@ -1,0 +1,47 @@
+                                                    IPfire OpenVPN SiteToSite
+
+                                                                     Site1
+lan range :192.168.0.0/24
+Green ip : 192.168.0.1
+Red ip : 192.168.100.1
+IP VPN Tunnel: 10.20.30.0/24
+
+------------------------------------------------------------------------------------
+                                                                     Site2
+LAN range : 192.168.90.0/24
+Gren ip : 192.168.90.1
+Red ip : 192.168.100.2
+IP VPN Tunnel : 10.20.30.0/24
+
+------------------------------------------------------------------------------------
+                                                                     Site1
+turn on open vpn
+create certificate
+Create a connection : Net to net vpn    
+give it a name                                          Remote host/ip : 192.168.100.2
+act as : OpenVpn Site1                                  Remote subnet:192.168.90.0/24
+local subnet : 192.168.0.0/255.255.255.0                UDP
+open vpn subnet : 10.10.1.0/255.255.255.0
+destination port : 2000
+---
+MTU : 1400
+mssfix : uncheck this
+---
+Authentication
+Generate a certificate
+fill it if you want
+Valid days : 7300
+---
+save it
+export the Site2 package
+add a rule in firewall rule to accept the other side
+------------------------------------------------------------------------------------
+                                                                     Site2
+Create a certificate
+---
+turn on open vpn
+Create a connection
+        Net to Net upload Site2 package)
+        upload the package
+add a rule in firewall rule to accept the other side
+
