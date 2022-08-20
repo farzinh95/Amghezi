@@ -1,0 +1,33 @@
+in creating vm tab
+check the qemu agent
+scsi controller virtio scsi
+
+in Hard disk tab
+bus/Device = SCSI
+SCSI controller VirtIo
+Cache write back
+if it's on ssd drive check the discard
+
+other tabs choose as you want
+
+download the latest virtio for your proxmox
+add it as a new cd allong side your windows iso to the vm
+
+start the vm
+
+windows will not find hard drives
+
+load driver / browse to the virt disk
+its in the vioscsi choose your windows type
+install the drive
+
+then install the windows
+
+when windows is installed go to device manager
+install everything that is not recognised from virtio disk
+
+install the guest-agent from the disk
+
+it's done
+
+
