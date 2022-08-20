@@ -1,0 +1,113 @@
+proxmox cli essentials
+===========================
+proxmox ip
+
+nano /etc/network/interfaces
+---------------------------------------
+proxmox name
+
+nano /etc/hosts
+nano /etc/hostname
+============================
+Vm commands 
+
+qm -> quemu manager
+man qm
+---------------------------------------
+listing all the vm's
+qm list
+----------------------------------
+starting vm with id  100
+qm start 100
+#you can't start a template
+----------------------------------
+shutting down vm number 101
+qm shutdown 101
+------------------------------------
+ rebooting a vm
+qm reboot 101
+-------------------------------------
+Handling misbehaving vm
+it's for when you can't shutdown or reboot a vm with web console
+qm reset 101
+qm stop 101
+------------------------------------------
+getting 101 info and the settings we can config
+qm confing 101
+---------------------------------------------
+starting a vm on boot
+qm set --onboot=1 101
+
+reverting it
+qm set --onboot=0 101
+---------------------------------------
+finding how many cores or memory a vm has
+qm config 101 | grep cores
+qm config 101 | grep memory
+----------------------------------------
+changing memory for vm 101
+qm set --memory 2048 101
+============================
+Container commands
+
+container list
+pct list
+---------------------------------------------
+container info
+pct config 104
+-----------------------------------------
+starting a ct
+pct start 103
+#you can't start templates
+-----------------------------------------
+pct reboot 104
+pct shutdown 104
+pct reset 104
+pct stop 104
+---------------------------------------
+entering a container
+pct enter 104
+#ctrl+d exits the container
+---------------------------------------
+current configs
+pct config 104
+---------------------------------------
+starting a container on boot
+pct set 104 -onboot 1
+---------------------------------------
+changing memory
+pct set 104 -memory 1024
+
+================================
+converting hyper-v to proxmox
+
+create a vm in proxmox
+###this senario lets say the vm no. is 1
+choose the Hard drive IDE
+***give it a right size
+
+copy the vhd and vhdx file in /var/lib/vz/images
+--------------------------
+converting the vhdx files to qcow2
+$$test01 is the vhdx file name
+
+qemu-img check -r all test01.vhdx
+ qemu-img convert -O qcow2 test01.vhdx /var/lib/vz/images/100/vm-100-disk-1.qcow2
+ ==================================
+Proxmox firewall cli
+
+datacenter view
+
+enable /disable
+
+/etc/pve/firewall/cluster.fw
+ 
+ diable
+ enable: 0
+
+ enable
+ enable: 1
+
+ 
+ 
+ 
