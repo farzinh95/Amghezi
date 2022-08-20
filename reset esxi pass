@@ -1,0 +1,37 @@
+
+GParted
+
+hypervisor/system image is located on the first 250 MB partition (/dev/sda5) which contains the state.tgz file.
+
+close GParted and open the Terminal
+
+sudo -s
+mount /dev/sda5 /mnt
+cd /mnt
+ls
+
+cp  state.tgz  /tmp
+cd  /tmp
+tar xzf  state.tgz
+ls
+
+tar  xzf  local.tgz
+ls
+Go to the /etc directory and you can gain access to the shadow file which contains the password hash of ESXi root account.
+cd /etc
+ls
+
+Run the vi shadow command to open the shadow file in the vi editor.
+
+Once you have removed the password hash, press ESC to return to the command mode. Type in :wq and press Enter. This will save your changes and exit
+
+cd 
+tar czf  local.tgz  etc
+tar czf  state.tgz  local.tgz
+cp  state.tgz  /mnt/
+umount  /mnt
+
+type reboot then remove the live CD and wait for ESXi server to restart. After a while, you'll get the following screen where you can configure the system by pressing F2.
+
+the password field blank and you can log into the root account
+
