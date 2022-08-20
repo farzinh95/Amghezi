@@ -1,0 +1,35 @@
+NextCloud with let's encrypt certificate
+
+Install ubuntu server
+
+            Installing NextCloud
+##################################################################################################
+###         install tmux ( its a program so that if i loose connection to my ssh server        ###
+###         i can ssh back to it then run tmux and continue my work with ths command           ###
+###         tmux attach)                                                                       ###
+###                                                                                            ###
+###             apt install tmux                                                               ###
+##################################################################################################
+
+tmux
+install wget
+
+#wget the link in the nextcloud site
+
+
+
+by default nextcloud only responses to the local host name
+you have to add your own domain name that you want
+
+sudo nextcloud.occ config:system:set trusted_domains 1 --value=The-Domain-Name-You-Have
+
+open the ports on your firewall
+sudo ufw allow 80,443/tcp
+
+you have to go to the lets encrypt create a user
+give your email and the domain name
+
+sudo nextcloud.enable-https lets-encrypt
+y
+domain name
+
