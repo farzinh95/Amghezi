@@ -1,0 +1,141 @@
+MikroTik OpenVPN ----> Site to site
+
+
+                                    Site1
+Eth1->WAN 10.98.100.1 (Public IP)
+Eth2->LAN 192.168.100.1
+
+OpenVPN IP 172.16.1.1
+------------------------------------------------------------------------
+                                    Site2
+Eth1->WAN 10.98.100.2 (Public IP)
+Eth2->LAN 192.168.101.1
+
+OpenVPN IP 172.16.1.2
+
+---------------------------------------------------------------------------
+                                    Site1
+System/Certificates
+                                                Creating CA Cert
+                               General
+    Name : CA
+    Country : IR
+    State : Tehran
+    Common name : CA
+    Key Size : 4096
+    Days Vali :3650
+                       Key usage
+    ✓ crl sign                 ✓  key cert. sign
+        
+                                                Creating Server Cert
+                              General
+     Name : Server
+     Country : IR
+     State : Tehran
+     Common name : Server
+     Key Size : 4096
+     Days Vali :3650
+                            Key usage
+        ✓Digital signature
+        ✓keys encipherment
+                                 ✓ tls server
+
+                                                    Creating Client Cert
+                                General
+     Name : Client
+     Country : IR
+     State : Tehran
+     Common name : Client
+     Key Size : 4096
+     Days Vali :3650
+                               Key usage
+      ✓tls client
+
+****We have created the certs now lets config them
+          1.  choose CA cert
+                General -> sign
+                            Certificate : CA
+                                 start it
+                            wait until the progress says done
+          2.  Choose Server
+                General -> sign
+                            Certificate : server
+                            CA : CA
+                                    start it
+                            wait until the progress says done
+         3. Choose Client
+                General -> Sign
+                                Certificate : Client
+                                CA : CA
+                                    start it
+                            wait until the progress says done
+
+***Exporting the certs
+Choose CA select the export tab
+        Certificate CA
+         Type PEM               -> export
+Choose Client
+        Certificate Client
+        Typee PEM                           -> export
+        Export pass Pass1
+----------------------------------------------------------------           
+                                 PPP
+  Profile
+                Add -> 
+                general
+                            Name OPENVPN
+                            Local Add 172.16.1.1
+                            Remote Add 172.16.1.2
+                Protocols
+                        Use Encryption -> yes
+                Limit
+                        only one -> yes
+                           
+Secrets
+                Add -> general
+                            Name Site2Lab
+                            Pass : Pass2
+                            service : ovpn
+                            Profile OPENVPN
+   Interface
+                Ovpn server ✓ Enable
+                                port : change it if you want -> 1268
+                                profile OPENVPN
+                                Certificate : server
+                                ✓require client certificate
+                                auth : sha1
+                                cipher : aes256
+------------------------------------------------------------
+                                        IP/Firewall
+            Filter rules
+            add -> input
+                               protocol tcp
+                               any port  1194 or the port you have chosen ->1268
+                        Action
+                                accept
+Route
+            Add -> 192.168.101.0/24 (Site2 Range)
+            Gateway : openvpn or the ip (172.16.1.2)
+
+    ====================================================
+                                            Site2
+        Download the exported certs and keys
+                    upload them in Site2 router
+
+        System/Certificates
+                    Import -> choose them
+                    pass : Pass1
+-------------------------------------------------------------------------
+        Interface -> Add -> ovpn client
+                    dial out
+                    Connect to 10.98.100.1   (Site1 PUBLIC IP)
+                    port the port you used in server -> 1268
+                    user Site2Lab
+                    Pass : Pass2
+                    profile : default encryption
+                    Certificate client.cert
+                   ✓ add default route
+  ----------------------------------------------------------------
+        Route
+                    Add -> 192.168.100.0/24 (Site1 Range)
+                    Gateway : openvpn or the ip (172.16.1.1)
