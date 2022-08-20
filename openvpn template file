@@ -1,0 +1,44 @@
+openvpn client template - single file
+#Template client.ovpn
+
+--------------------------------------
+client
+dev tun
+proto tcp
+remote #server-ip/dns                     ####don't  forget to change this
+port #portnumber                          ####don't  forget to change this
+nobind
+persist-key
+persist-tun
+tls-client
+auth-user-pass
+remote-cert-tls server
+verb 4
+mute 10
+cipher AES-256-CBC
+auth SHA1
+redirect-gateway def1                     #if you want everything to go through this tunnel
+
+#ca ca.crt                                ####don't  forget to change this
+<ca>
+###copy the cert in here
+</ca>
+
+#cert cert.crt                            ####don't  forget to change this
+<cert>
+###copy the cert in here
+</cert>
+
+#key clientkey.key                        ####don't  forget to change this
+<key>
+###copy the key in here
+</key>
+
+-----------------------------------------------------
+if you want everything to go through ovpn make sure ovpn file has 
+redirect-gateway def1
+
+
+if you want specific routes just add it in ovpn file
+
+route 10.10.11.0(server network) 255.255.255.0(server subnet) 192.168.2.1(ovpn gateway)
