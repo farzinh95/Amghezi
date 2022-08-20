@@ -1,0 +1,41 @@
+recorded calls in issabel path
+
+/var/spool/asterix
+
+=================================
+
+Issabel VOIP Trunk
+
+
+For gateway Trunk
+
+CID options = Alow Any CID
+
+Outgoing setting
+
+give it a name
+
+PEER Details:
+
+host=172.16.10.20           #Gateway IP
+type=friend
+canreinvite=no
+context=from-pstn
+port=5060
+qualify=yes
+trunk=yes
+dtmfmode=inband
+-----------------------------------------------------------
+With Line
+
+
+host=10.153.101.181     #IP given from PTSN
+context=from-trunk
+type=friend
+qualify=yes
+
+=================================================
+
+changing issabel recording path
+edit /etc/asterisk.conf
+parameter astspooldir
