@@ -1,0 +1,51 @@
+Mi krotik IPIP with Ipsec
+
+Site1
+Wan : 192.168.70.2/30
+LAN : 10.10.11.1/24
+tunnel ip : 172.22.22.1
+
+--------------------------------------------------
+Site2
+Wan : 192.168.80.2/30
+LAN : 10.10.12.1/24
+Tunnel ip : 172.22.22.2
+
+--------------------------------------------------------
+                    Site1
+interface/ ip tunnel
+add one give it a name
+local address       192.168.70.2           #wan address
+remote address      192.168.80.2           #other office wan address 
+ipsec secret        Pass1
+uncheck allow fast path
+✓ clamp tcp mss
+apply
+
+--------------------------------------------------
+                    Site2
+interface / ip tunnel
+add one give it a name
+local address       192.168.80.2           #wan address 
+remote address      192.168.70.2           #other office wan address 
+ipsec secret        Pass1
+uncheck allow fast path
+✓ clamp tcp mss
+apply
+
+--------------------------------------------------
+connection is established
+                        Site1
+let's route
+ip / address 
+add ip to ip-tunnel interface   172.22.22.22.1/30
+
+-------------------------------------------------------
+                        Site2
+ip / address 
+add ip to ip-tunnel interface   172.22.22.22.2/30
+-------------------------------------------------------
+add routes for each network
+ip / route
+dst addr        other side range 
+gateway 172.22.22.1 / 172.22.22.2
