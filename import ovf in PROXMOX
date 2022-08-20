@@ -1,0 +1,5 @@
+qm importovf <vmid> <ovf file> <storage>
+
+Ex: qm importovf 100 exported.ovf local-lvm
+
+https://zachgrace.com/cheat_sheets/proxmox/
