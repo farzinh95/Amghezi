@@ -1,0 +1,80 @@
+ proxmox firewall
+
+first add the firewall rules
+then enable it
+you will locked out if you don't
+-------------------------------------------
+you should enable the firewall in server (pve1,2,3....)
+and the vm/containers
+
+if you want access to webconsole in let's say pve1
+you should add it for pve1
+
+if you want to access a certain port on a vm
+you should add it's rule for the vm/container's firewall
+and enable the firewall for that particular vm
+
+-------------------------------------------
+what to do when your locked out
+
+Disable the firewall
+
+log in the proxmox server manually
+
+nano /etc/pve/firewall/cluster.fw
+make it 0
+
+enable : 0
+===========================
+#you can enable and config firewall for the hole Datacenter, pve, vm or containers
+
+#if you add a rule in Datacenter it will be added to every server in datacenter
+#even the one that join the cluster after this change
+
+
+#this is for Datacenter and web console
+
+Datacenter / firewall
+add
+
+Direction in
+Action : ACCEPT                                         Enable ✓
+Interface : vmbr0                                        Macro
+#or what ever interface you want                Protocol : tcp
+
+Source :                                    Source port:
+#the source ip you want
+Destination :                       Dest. port : 8006
+
+#this allows every one to use the web console
+----------------------------------------
+ping / icmp
+
+Direction in
+Action : ACCEPT                                         Enable ✓
+Interface : vmbr0                                        Macro
+#or what ever interface you want                Protocol : icmp
+
+Source :                                    Source port:
+#the source ip you want
+Destination :                       Dest. port : 
+----------------------------------------
+SSH
+#you should add ssh for each server in their server view
+#pve1 / firewall
+
+add
+
+Direction in
+Action : ACCEPT                                         Enable ✓
+Interface : vmbr0                                        Macro : SSH
+#or what ever interface you want                Protocol : 
+
+Source :                                    Source port:
+#the source ip you want
+Destination :                       Dest. port : 
+===========================
+Enabling the firewall
+
+Datacenter / Firewall / Options
+Firewall            Yes
