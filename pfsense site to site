@@ -1,0 +1,210 @@
+pfsense site to site openvpn
+
+                                        Server
+WAN : 192.168.3.98
+LAN : 192.168.40.1
+
+--------------------------------------------------------
+                                        Client
+WAN : 192.168.3.104
+LAN : 192.168.20.1
+
+=========================================
+                                        Server Side
+vpn / openvpn / servers
+add +
+
+server mode : peer to peer (shared Key)
+interface choose the wan interface that you want
+change the lan port
+shared key ✓autimatic generate key
+
+encryption algorithm    aes 256 cbc
+(you have to change clients  to  aes 256 too)          client and server should have the same encryption
+
+
+ipv4 tunnel Network         192.168.70.0/24        ###choose some network that you don't have
+(DHCP for openvpn)
+
+IPv4 remote network         192.168.20.0/24            ###client's side network range
+
+#if you have more than one , and the other one
+#192.168.20.0/24, 192.168.10.0/24, ...
+
+concurent connection          ###if you need it
+
+Don't forget to save it
+------------------- 
+firewall / rules / wan
+make sure the openvpn port is  open
+
+--------------------
+firewall / rules / openvpn
+add
+action pass
+protocol any
+
+go back to vpn / openvpn 
+edit the one you created
+
+###copy the shared key
+
+==============================
+                                    client side
+vpn / openvpn /clients
+add +
+server mod peer to peer shared key
+change the port
+server host address : wan ip of server side
+192.168.3.98
+
+uncheck the auto generate key
+copy the shared key you have copied
+
+encryption algorithm make sure it matches server side (aes 265 cbc)
+
+ipv4 tunnel network    192.168.70.0/24      (openvpn network)
+
+ipv4 remote network     192.168.40.0/24     (server side network)
+-------------------------------------------
+VPN is now connected but you can't ping the other side because
+it does not have a gateway
+
+interface / interface assingments
+add the open vpn network
+(available network ports)
+save
+
+this will give it a name like opt1
+change it how ever you want it
+
+you can check it in
+system / routing  / gateways
+
+add a firewall rule to check if they ping each other
+
+firewall / rule
+you have to add rule to the one named in interfaces
+
+action pass
+protocol any
+save
+
+#this is a wide open rule
+------------------------------------
+interface / opt1
+description openvpn
+enable ✓
+this will add a gateway so we can ping the other side
+you have to restart openvpn service or restart the router
+-------------------------------
+firewall /rules / openvpn
+add another one
+action pass
+protocol any
+
+pfsense site to site openvpn
+
+                                        Server
+WAN : 192.168.3.98
+LAN : 192.168.40.1
+
+--------------------------------------------------------
+                                        Client
+WAN : 192.168.3.104
+LAN : 192.168.20.1
+
+=========================================
+                                        Server Side
+vpn / openvpn / servers
+add +
+
+server mode : peer to peer (shared Key)
+interface choose the wan interface that you want
+change the lan port
+shared key ✓autimatic generate key
+
+encryption algorithm    aes 256 cbc
+(you have to change clients  to  aes 256 too)          client and server should have the same encryption
+
+
+ipv4 tunnel Network         192.168.70.0/24           ###choose some network that you don't have
+(DHCP for openvpn)
+
+IPv4 remote network         192.168.20.0/24            ###client's side network range
+
+#if you have more than one , and the other one
+#192.168.20.0/24, 192.168.10.0/24, ...
+
+concurent connection          ###if you need it
+
+Don't forget to save it
+------------------- 
+firewall / rules / wan
+make sure the openvpn port is  open
+
+--------------------
+firewall / rules / openvpn
+add
+action pass
+protocol any
+
+go back to vpn / openvpn 
+edit the one you created
+
+###copy the shared key
+
+==============================
+                                    client side
+vpn / openvpn /clients
+add +
+server mod peer to peer shared key
+change the port
+server host address : wan ip of server side
+192.168.3.98
+
+uncheck the auto generate key
+copy the shared key you have copied
+
+encryption algorithm make sure it matches server side (aes 265 cbc)
+
+ipv4 tunnel network    192.168.70.0/24      (openvpn network)
+
+ipv4 remote network     192.168.40.0/24     (server side network)
+-------------------------------------------
+VPN is now connected but you can't ping the other side because
+it does not have a gateway
+
+interface / interface assingments
+add the open vpn network
+(available network ports)
+save
+
+this will give it a name like opt1
+change it how ever you want it
+
+you can check it in
+system / routing  / gateways
+
+add a firewall rule to check if they ping each other
+
+firewall / rule
+you have to add rule to the one named in interfaces
+
+action pass
+protocol any
+save
+
+#this is a wide open rule
+------------------------------------
+interface / opt1
+description openvpn
+enable ✓
+this will add a gateway so we can ping the other side
+you have to restart openvpn service or restart the router
+-------------------------------
+firewall /rules / openvpn
+add another one
+action pass
+protocol any
+
