@@ -1,0 +1,82 @@
+pfsense server client vpn (road warrior) OPENVPN
+
+pfsense
+WAN 192.168.3.195
+LAN 192.168.40.1/24
+LAN2 10.1.10.1/24
+Tunnel network 192.168.70.1/24
+
+-----------------------------
+client
+Local ip 10.0.2.15
+
+=============================
+                    PFSENSE
+
+system / package manager
+
+install the openvpn-client-export
+-----------------------
+VPN / OPENVPN / Wizard
+
+Type of server
+Local user access
+>>next
+
+Certificate 
+create a certificate or choose the one you have created before
+>>next
+
+Interface WAN
+
+Protocol TCP IPV4
+
+Description name the vpn here
+
+Local port the port that you want
+
+Tunnel network
+192.168.70.0/24
+
+Redirect Gateway
+check it if you want the client to use your internet
+
+Local network
+the networks that you want the client to have access to
+If you have more than one network you should add it here
+192.168.40.0/24, 10.1.10.0/24
+
+Inter-client communication
+check it if you want the vpn clients to communicate with each other
+
+Duplicate connections
+if you want the client to be able to connect with more than one device
+
+Dynamic IP
+check it for dhcp
+
+DNS Server
+if you want to force a dns for the client
+
+>>Next
+
+Firewall Rule
+check it to add the rule
+
+open vpn rule
+check it to add the rule
+>>Next
+
+Finish
+---------------------------------------
+        Client export
+
+you have chosen the local user
+so you have to create the users that you want to connect
+in the pfsenes
+
+Remote acces server 
+choose the right one
+
+download the ovpn file
+
