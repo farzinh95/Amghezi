@@ -1,14 +1,15 @@
 Rdp
 
-Rdp
 Open mmc add snap in
 Services of the target
+
 Enable remote registery
 Disable firewall
+
 Open registery of my computer
 File>connect network registery
+
 Open registery of target
-In hkey_machine\system\currentcontrolset\
-ControlSet\control\terminalServer
+In hkey_machine\system\currentcontrolset\ControlSet\control\terminalServer
 In terminal server open fdenyTSConnetion
 Change 1 to 0
