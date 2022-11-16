@@ -1,0 +1,89 @@
+securing mikrotik
+
+1. Make sure your time is right    
+        (system/sntp client, system clock )
+--------------------------------------
+2. Always keep your router updated 
+        (system / packages)
+--------------------------------------
+3. Create a new user give it admin access and disable the default admin user
+        (system / users)
+--------------------------------------
+4. Disable the services your don't use and change the port of the services you do use 
+        (ip / services)
+--------------------------------------
+5. Make sure the services are only available for specific networks 
+        (ip / services)
+--------------------------------------
+6. Make sure your winbox is not going to work with mac 
+        (tools / mac server / mac telnet server/ mac winbox server/ 
+        mac ping server change them to none )
+--------------------------------------
+7. Stop the neighbor discovery 
+        ( ip / neighbors / change the discovery settings uncheck it 
+        and change it to none)
+--------------------------------------
+8. Uncheck the dns resolver ( ip / dns / Allow remote requests)
+--------------------------------------
+9. Uncheck the web proxy ( ip / web proxy )
+--------------------------------------
+10. Uncheck the socks settings ( ip / socks )
+--------------------------------------
+11. Use port knocking for winbox if you have to connect to it with dynamic ips
+
+        ( ip / firewall -> add rules in filter rule)
+
+ 1. Client sends packet to router on port PORT1
+ Router adds client’s IP address to address list “knock-knock” with a timeout of 15 seconds
+
+                        General
+                                Chain : input
+                                Protocol : tcp
+                                Dst. port : PORT1
+                        Action
+                                Action : add src to address list
+                                Address List : knock-knock
+                                Timeout : 00:00:15
+ 
+ 2. Client sends packets to router on port PORT2
+ Router checks to see if the client’s IP address is on address list “knock-knock” and puts them in the list "safe"
+                        General
+                                Chain : input
+                                Protocol :  tcp
+                                Dst. port : PORT2
+                        Advanced
+                                Src Address list : knock-knock
+                        Action 
+                                Action : add src to address list
+                                Address List : safe
+                                Timeout : 00:30:00
+ 
+ 3. If it is then router adds IP address to address list “safe” with a timeout of 30 minutes
+ Client has full access to router for 30 minutes
+                        General
+                                Chain : input
+                                protcol : tcp
+                        Advance
+                                Src. Address List : safe
+                        Action
+                                Action : Accept
+
+so if you want to use winbox to connect to your mikrotik
+first use winbox ( in this case lets say my public ip is xyz)
+try to conect to xyz:1374
+then try to conect to xyz:1995
+then try to connect to xyz
+with winbox
+now you can use it for 30min
+--------------------------------------
+12. Drop everything else
+############################################
+######                                                                     ######
+######      MAKE SURE THIS IS THE LAST RULE      ######
+######                                                                     ######
+############################################
+                General
+                        chain : input
+                Action
+                        drop
+--------------------------------------
