@@ -70,8 +70,8 @@ securing mikrotik
 
 so if you want to use winbox to connect to your mikrotik
 first use winbox ( in this case lets say my public ip is xyz)
-try to conect to xyz:1374
-then try to conect to xyz:1995
+try to conect to xyz:PORT1
+then try to conect to xyz:PORT2
 then try to connect to xyz
 with winbox
 now you can use it for 30min
