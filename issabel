@@ -69,7 +69,3 @@ type=friend
 qualify=yes
 
 =================================================
-
-changing issabel recording path
-edit /etc/asterisk.conf
-parameter astspooldir
