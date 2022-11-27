@@ -1,6 +1,40 @@
-recorded calls in issabel path
+default recorded calls path in issabel
 
-/var/spool/asterix
+/var/spool/asterisk/monitor/
+----------
+
+changing issabel recording path
+
+edit /etc/asterisk/asterisk.conf
+parameter astspooldir
+
+================================
+
+Issabel resetting root pass
+
+restart the server in grub menu press e
+
+change the line that starts with linux16....
+change ro -> rw init=/sysroot/bin/sh
+
+ctrl + x
+
+chroot /sysroot
+passwd root
+
+type in the new PASSWORD
+
+restart
+
+
+--------------------
+resetting admin pass
+
+login as root in cli
+
+/usr/bin/issabel-admin-passwords  --change
+
+it will ask for a password
 
 =================================
 
@@ -29,7 +63,7 @@ dtmfmode=inband
 With Line
 
 
-host=10.153.101.181     #IP given from PTSN
+host=10.20.30.40     #IP given from PTSN
 context=from-trunk
 type=friend
 qualify=yes
