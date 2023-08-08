@@ -1,0 +1,596 @@
+cisco notes
+
+3 modes
+user mode
+priviledge mode or enable mode
+config mode
+---------------------
+saving in nvram
+
+copy running-config startup-config
+
+saving in flash
+copy running-config flash
+---------------------
+changing host name
+
+en
+conf t
+hostname R1
+---------------------
+password for user mode
+en
+conf t
+line console 0
+password letmein     
+ ###with this commoand you created the password
+login
+###with login command you enable it
+exit
+
+enable password cisco
+
+enable secret itsasecret
+
+encrypt the passwords
+service password-enctyption
+
+--------------------------
+banner
+in config mode
+banner motd "this is the banner"
+---------------------------
+telnet and ssh (vty or virtual terminal)
+
+first  give ip to your vlan
+
+first you have to enable user mode
+same like enabeling console
+but its better to use username and password
+
+### we can have 16 concurent connections
+### so when you want to configure user and pass and stuff ###configure them all together, this is the easier way
+
+
+###ycreating a password pizza and enabling it
+
+sw(config)# line vty 0 15
+sw(config-line)# password pizza
+sw(config-line)# login
+
+
+
+####but it's better to use username and password so
+first delete that password
+
+sw(config-line)# nopassword
+sw(config-line)# exit
+
+### create a local username and pass
+sw(config)# username farzin password pizza
+
+### now tell it to learn your user and pass from local data base
+sw(config)# line vty 0 15
+sw(config-line)# login local
+
+### you have to have a password for enable mode
+
+sw(config)# enable password burger
+
+### enable secret has priority to enable password
+sw(config)# enable secret steak
+
+### now steak will work not burger
+
+### always use secret because it has been hashed
+### it is encrypted
+
+### encrypt every password with this service
+
+sw(config)#service password-encryption
+exit
+
+### now if you look at runing-config you will see that it's encrypted
+
+### even if someone does a no service password-encryption
+they cant see the passwords
+but from now on passwords will not be encrypted
+
+### now if you telnet to the ip you will see that your telnet have been configured with user and pass for global and priviledge mode
+
+
+
+### BUT NEVER DO THIS
+### ALWAYS USE SSH
+
+### let's start from begining
+
+sw>en
+sw#conf t
+sw(config)# interface vlan 1
+sw(config-if)# no shutdown
+sw(config-if)# ip address 192.168.1.100 255.255.255.0
+sw(config-if)# exit
+
+sw(config)# username farzin password pizza
+sw(config)# line vty 0 15
+sw(config-line)# login local
+sw(config-if)# exit
+sw(config)# enable password burger
+
+### now first creat the key
+sw(config)# crypto key generater rsa 
+
+### you might need to change the host name then run the same command
+
+### it will say that you need to create domain name
+sw(config)# ip domain-name farzin.food
+
+### run the command again
+
+sw(config)# crypto key generater rsa 
+
+### it will ask how big of key you want default is 512 I usually choose 1024
+
+### be default telnet is enabled but ssh is disabled
+### for enabling ssh
+
+sw(config)# line vty 0 15
+sw(config-line)# transport input  ssh
+### you have 3 options none, ssh, telnet
+### when you turn on ssh telnet will be disabled
+### if you want to have telnet and ssh run
+
+sw(config-line)# transport input all
+
+### THIS IS NOT GOOD BUT THIS IS TEST JUST TURN SSH ON
+
+### DONT FORGET TO ENCRYPT ALL THE PASSWORDS WITH THE SERVICE
+
+
+sw(config)#service password-encryption
+
+
+---------------------------
+interface modes
+
+en
+conf t
+interface f0/1
+switchport mode access
+switchport mode trunk
+
+
+checking trunks
+
+show interfaces trunk
+
+---------------------------
+vlan
+
+en
+conf t
+vlan 10
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 10
+exit
+
+do show vlan brief
+
+ADDING RANGE OF PORTS TO A VLAN
+
+en
+conf t
+inter range fa0/1-4
+switchport mode access
+switchport access vlan 10
+
+
+### giving a name to the vlan
+vlan 2
+name IT
+exit
+
+### if you dont give it a name, name will be the vlan number
+
+
+---------------------------
+vtp or vlan trunking protocol
+
+
+### THE LINE MUST BE TRUNK BETWEEN THE SWITCHES###
+
+### checking vtp
+
+show vtp status
+
+
+en
+conf t
+vtp mode server
+vtp domain burger
+vtp password pizza
+
+on the other switches
+vtp mode client
+vtp domain burger
+vtp password pizza
+
+
+### changing vtp version
+sw(config)# vtp version 2
+
+
+### VTP revision
+every change on vtp server
+adds a number to vtp revision
+if a client has revision number 10
+and the server has 8 the client will not follow the server
+
+
+### you can have vtp transparent
+if a switch is in between and in transparent mode
+this switch will not follow the server's commands but will forward the commands on to the next switches that we have
+
+first add it to domain then transpartent
+
+vtp domain farzin
+vtp mode transparent
+
+### now this sw will just forward the vtp informations
+### but transparent can creat vlan for itself but will not tell anyone else
+
+
+### IMPORTANT NOTES ABOUT VTP
+### you need at least one vtp server
+### links between switches must be trunk
+### trunk links should have the same encapsulation
+### vtp domain must be the same in all switches
+### vtp password must be the same in all switches
+### vtp version does not have to be same :D
+### only vtp server can create vlan
+### assigning vlan to interface is not vtp's job
+---------------------------
+
+inter vlan routing with router
+
+
+creating sub interfaces for vlan 10 and 20
+
+interface gig 0/0.10                                 ### sub int has been created
+encapsulation dot1q 10                          ###10 is the number of vlan
+ip address 192.168.1.1 255.255.255.0            ### ip for int
+exit
+
+
+interface gig 0/0.20
+encapsulation dot1q 20
+ip address 192.168.2.1 255.255.255.0
+exit
+---------------------------
+aggregation
+inter vlan routing with layer 3 switch
+
+### link between layer 3 and layer 2 switches must be trunk
+
+this is on layer 3 sw
+sw3(config)#interface fast 0/23
+sw3(config-if)# switchport mode trunk
+
+it will be on auto configure it manually to dot1q
+
+sw3(config-if)# switchport trunk encapsulation dot1q 
+sw3(config-if)# switchport mode trunk
+
+
+this is on layer 2 sw
+sw2(config)#interface fast 0/23
+sw2(config-if)# switchport mode trunk
+
+
+
+###create the vlans
+
+vlan 2
+exit
+
+vlan 3
+
+###give them ip
+
+
+
+### now every time you want any vlans 
+just create the vlans and give it an ip
+
+### this means you just need to create the vlan
+### give it an ip
+### now for clients for each vlan just give the vlan's ip for gateway
+
+sw(config)#interface vlan 2
+sw(config-if)# no shut
+sw(config-if)# ip address 192.168.1.1 255.255.255.0
+exit
+
+sw(config)#interface vlan 3
+sw(config-if)# no shut
+sw(config-if)# ip address 192.168.2.1 255.255.255.0
+
+
+### to enable routing capability on switch 3
+
+sw3(config)#ip routing
+
+---------------------------
+static ip
+ip route 192.168.7.0 255.255.255.0 192.168.1.1
+the other network net id / the other network SM / the gateway that my router can see
+---------------------------
+dynamic routing rip2
+
+en
+conf t
+router rip
+version 2
+network 192.168.1.0         #the networks that are connected to this router
+network 192.168.2.0
+no auto-summary
+
+for removing them just 
+go to router rip
+no network 192.168.1.0
+---------------------------
+turning of an interface
+en
+conf t
+interface fa0/1
+shut
+exit
+
+to turn it up
+en
+conf t
+interface fa0/1
+no shut
+exit
+
+---------------------------
+port security
+en
+conf t
+interface fa 0/1
+switchport mode access
+switchport port-security
+
+##### To specify how many mac addresses we allow on this port
+##### default is 1 but if you needed 2 for like phone or something
+switchport port-security maximum 2
+
+#### to deny a specific mac
+switchport port-security forbidden
+
+
+### for Sticky
+switchport port-security mac-address sticky
+
+
+#### so say what happens to violations
+switchport port-security violation ?
+
+### there are 3 options you can do protect restrict shutdown
+### shutdown is default and its awsome
+### restrict the port is on but restricting packets
+### that it blocks them but send a snmp packet that this port has been blocked
+### this is why (for monitoring it's awsome)
+### protect drops the packets but no snmp packet (port is on)
+
+### to check port security status
+en
+show port-security
+
+### to check it better on a specific port
+show port-security interface fa0/1
+
+
+### to see the addressess
+show port-security address
+
+
+
+### when the violation happes the port will be shut
+### to enable it
+
+conf t
+interface fa0/1
+shut
+no shut
+
+
+### check it
+show port-security interface fa0/1
+
+---------------------------
+STP
+
+spanning-tree port-fast
+spanning-tree bpdu-guard enable
+
+---------------------------
+Network filtering
+
+Access list
+
+access list 1-99,  1300-1999 standard
+access list 100-199  2000-2699 extended lilst
+
+
+######### Standard access list
+
+### each line has a priority
+
+### Standard access list only filter based on source ip
+
+
+### Allow this ip to go anywhere
+Access-list 1 permit 192.168.1.10 0.0.0.0
+
+### Deny this range
+Access-list 1 deny 192.168.1.0 0.0.0.15
+
+
+router(conf)# access-list 1 permit 192.168.1.10 0.0.0.0
+                                                                     vv      ip             wild card
+
+access-list 1 deny 192.168.1.0 0.0.0.15
+
+host = 0.0.0.0
+any = 255.255.255.255
+
+wild card != subnet mask
+
+
+############ extended access-list
+filtering based
+source IP, destination IP, source port, destination port and protocol
+
+                          Mandatory                            Optional
+                  src IP           dest IP          src port            dest port
+ip                  ✓                ✓                 x                  x
+icmp                ✓                ✓                 x                  x
+tcp                 ✓                ✓                 ✓                 ✓
+udp                 ✓                ✓                 ✓                 ✓
+
+
+##source ip and destination ip are mandatory if you are not intrested use the any key word
+
+
+extended access list
+
+router(conf)#Access-list <number> {permit| deny} {ip|icmp} <src-IP> <wild-mask> <destI-P> <wild-mask>
+
+router(conf)#Access-list <number> {permit| deny} {tcp|udp} <src-IP> <wild-mask> operators <src-Port> <dest-IP> <wild-mask> operators <Dest-port>
+
+
+#####operators
+eq              equal
+neq             not equal
+gt                 greater than
+lt                   less than
+range           range of ports like 20,23 = ssh, ftp, telnet
+
+
+### Allow icmp from any port to any destination
+Access-list 101 permit ICMP any any
+
+### Allow what ever 192/168.1.100 to anywhere
+Access-list 101 permit host 192.168.1.100 any
+
+### Allow port 80 of this ip
+Access-list 101 permit TCP host 192.168.1.19 any eq 80
+
+#### be ware of this
+Access-list 101 permit host 192.168.1.10 eq 80 any
+
+### port 80 here is the source port DON'T MAKE THIS MISTAKE
+
+### commenting the access list
+access-list 101 remark "access to felan server"
+
+
+### Allow this ip to accessable from any where
+access-list 101 permit ip any host 192.168.100.30
+
+### Allow this ip to anywhere
+access-list 101 permit ip host 192.168.2.100 any
+
+
+### Deny tcp ports from this ip to that ip for port 80
+access-list 101 deny tcp host 192.168.2.19 host 192.168.100.10 eq 80
+
+
+### Allow this ip to access any where except for this
+access-list 101 deny tcp host 192.168.2.10 host 192.168.100.10 eq 80
+access-list 101 permit ip host 192.168.2.100 any
+
+
+### Allow everyone to see this ip
+access-list 101 permit ip host 192.168.2.100 any
+
+
+#### use this access list for this VLAN for out bound
+
+router(conf)# interface vlan 100
+router(conf-if)# ip access group 101 out
+
+
+### you can not delete one rule in the access list
+### you can delete the whole access list
+### every new rule to access list goes to the end of the list
+
+### instead of using this dumb way use name based access list
+
+router(conf)# IP access-list <extended-standard> <name>
+
+if you run show accesss-list test
+it gives you numbers in the start of each rule
+you can delete a single rule with no and number
+like this
+router(config)#ip access-list extended test 
+router(config-ext-nacl)#no 20
+
+or you can add rule is between the numbers like this
+
+router(config)#ip access-list extended test 
+router(config-ext-nacl)# 55 permit tcp any any eq ftp
+
+this means you added a rule number 55 (numbers are important because of priority)
+
+
+### limiting vty lines VERY IMPORTANT
+
+router(config)#access-list 1 permit host 10.10.10.2
+router(config)#access-list 1 permit host 10.10.11.2
+router(config-line)#line vty 0 15
+router(config-line)#access-class 1 in
+router(config-line)#exit
+
+
+
+### scenario###
+
+pcs are connected to a sw then router
+other hand of router is connected to a sw ans server
+
+pc 1 : 192.168.0.10
+pc2 : 192.168.0.11
+Router fastethernet 0/1 192.168.1.1
+
+server 192.168.1.10
+Router fast ethernet 0/0 192.168.0.1
+
+### add ftp and email service on the server and add the client configs on the pcs
+
+
+### allow icmp for pc1 to server
+router(config)#ip access-list extended test
+router(config-line)#permit icmp host 192.168.0.10 host 192.168.1.10
+
+### allow tcp pc 1 to server port 80
+permit tcp host 192.168.0.10 host 192.168.0.10 eq 80
+
+
+### allow tcp ftp pc2 to server
+permit tcp host 192.168.0.11 host 192.168.0.10 eq ftp
+
+### only allow pc1 to send and receive email and pc2 to only receive email
+router(config-line)#permit tcp host 192.168.0.10 host 192.168.1.19 eq pop3
+router(config-line)#permit tcp host 192.168.0.10 host 192.168.1.19 eq smtp
+
+router(config-line)#permit tcp host 192.168.0.11 host 192.168.1.19 eq pop3
+
+router(conf)# interface fast 0/1
+ip access-group test out
+---------------------------
