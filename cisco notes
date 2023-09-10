@@ -49,7 +49,8 @@ same like enabeling console
 but its better to use username and password
 
 ### we can have 16 concurent connections
-### so when you want to configure user and pass and stuff ###configure them all together, this is the easier way
+### so when you want to configure user and pass and stuff
+ ###configure them all together, this is the easier way
 
 
 ###ycreating a password pizza and enabling it
@@ -63,7 +64,7 @@ sw(config-line)# login
 ####but it's better to use username and password so
 first delete that password
 
-sw(config-line)# nopassword
+sw(config-line)# no password
 sw(config-line)# exit
 
 ### create a local username and pass
@@ -270,8 +271,9 @@ interface gig 0/0.20
 encapsulation dot1q 20
 ip address 192.168.2.1 255.255.255.0
 exit
+
+
 ---------------------------
-aggregation
 inter vlan routing with layer 3 switch
 
 ### link between layer 3 and layer 2 switches must be trunk
@@ -292,6 +294,16 @@ sw2(config-if)# switchport mode trunk
 
 
 
+
+### Creat vlan sub interfaces
+### Give them ip
+
+sw2(config)# interface vlan 2
+sw2(config-if)# no shut 
+sw2(config-if)# ip address 192.168.1.1 255.255.255.0
+sw2(config-if)# exit
+
+
 ###create the vlans
 
 vlan 2
@@ -299,35 +311,17 @@ exit
 
 vlan 3
 
-###give them ip
-
-
-
-### now every time you want any vlans 
-just create the vlans and give it an ip
-
-### this means you just need to create the vlan
-### give it an ip
-### now for clients for each vlan just give the vlan's ip for gateway
-
-sw(config)#interface vlan 2
-sw(config-if)# no shut
-sw(config-if)# ip address 192.168.1.1 255.255.255.0
-exit
-
-sw(config)#interface vlan 3
-sw(config-if)# no shut
-sw(config-if)# ip address 192.168.2.1 255.255.255.0
-
 
 ### to enable routing capability on switch 3
 
 sw3(config)#ip routing
 
 ---------------------------
-static ip
+static ip routing
+
 ip route 192.168.7.0 255.255.255.0 192.168.1.1
 the other network net id / the other network SM / the gateway that my router can see
+
 ---------------------------
 dynamic routing rip2
 
@@ -458,10 +452,10 @@ source IP, destination IP, source port, destination port and protocol
 
                           Mandatory                            Optional
                   src IP           dest IP          src port            dest port
-ip                  ✓                ✓                 x                  x
-icmp                ✓                ✓                 x                  x
-tcp                 ✓                ✓                 ✓                 ✓
-udp                 ✓                ✓                 ✓                 ✓
+ip                    ✓                ✓                      x                       x
+icmp              ✓                ✓                      x                       x
+tcp                  ✓                ✓                     ✓                     ✓
+udp                 ✓                ✓                     ✓                     ✓
 
 
 ##source ip and destination ip are mandatory if you are not intrested use the any key word
@@ -594,3 +588,16 @@ router(config-line)#permit tcp host 192.168.0.11 host 192.168.1.19 eq pop3
 router(conf)# interface fast 0/1
 ip access-group test out
 ---------------------------
+DHCP server
+
+
+en
+conf t
+ip dhcp pool vlan10
+network 192.168.7.0 255.255.255.240
+default-router 192.168.7.14
+dns-server 192.168.8.2
+exit
+
+ip dhcp excluded-address 192.168.7.13 192.168.7.14
+
