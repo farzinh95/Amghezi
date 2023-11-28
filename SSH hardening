@@ -1,0 +1,295 @@
+SSH hardening
+
+
+################
+## change port ######
+#################
+
+vim /etc/ssh/sshd.config
+
+port 22 
+change it to whatever you want
+
+-------------------------------------------
+##########################
+########creating a good key#####
+##########################
+
+
+ssh as your user first 
+
+create a new key 
+ssh-keygen –t rsa 4096 
+
+
+If you want to change the path change it I don’t want to change 
+Created directory didn’t want to change 
+Enterpassphrase : always type in a passphrase for the key            pass1
+You can see that 2 files have been created 
+It will tell you the path 
+
+it is in your home directory in .ssh/
+
+-----------------------
+CHECKING THE INTEGRITY OF THE KEY ON THE CLIENT SYSTEM AND SERVER
+
+on server
+it will give you the fingerprint that you can check the integrity as bellow
+
+first go to cd .ssh
+if you ls you can see the 2 files
+
+ssh-key -lvf
+l is for checking integrity 
+v is for visualize random art
+f is for file
+
+now run the command for files
+
+ssh-keygen -lvf id_rsa.pub
+
+id_rsa.pub is the file name
+
+check that it is the same on client befor using it
+
+when on client ssh user@...
+you can see the finger print and every thing
+
+me on server will go to /etc/ssh/
+ls
+ssh-keygen -lvf ssh_host_ecsda.key.pub ### this is the file name
+
+now check with the client if it is the same or not
+
+if on the user on server that they have ssh in to the server
+is .ssh folder you can see the known_hosts
+---------------------------
+password less login
+
+now lets make it password less
+just using public and private key
+
+
+vim /etc/ssh/sshd_config
+
+in line 48
+#PubkeyAuthentication yes
+un comment it
+
+in line 70
+change PasswordAuthentication to no
+
+
+in line 43
+change PermitRootLogin to no
+
+
+disabling weak keys
+
+in line 26
+or search for ciphers or jusr write it in the end of the file
+
+Ciphers aes256-cbc,aes-256-ctr
+KexAlgorithms ecdh-sha2-nistp521,ecdh-sha2-nistp384
+
+### for KexAlgorithm choose one of them not both of these
+
+for redhat 8 and newer it wont change they created a new policy that works better
+
+cd /lib/systemd/system
+vim sshd.service
+
+EnvironmentFile= la blah blah
+copy the path la blah blah
+
+vim /etc/crypto-policies/back-ends/opensshserver.config
+in this file you can see which algorithms which macs which public keys ... is supported
+
+delete the ones you dont want and just keep
+aes-256-ctr,aes256-cbc
+
+
+restart ssh service with the following command
+systemctl restart sshd
+
+
+to check what is working on this server
+ssh -Q cipher
+ssh -Q key
+ssh -Q kex
+-------------------
+####################################
+###### ACCESS CONTROL FOR SSH##########
+####################################
+
+vim /etc/ssh/sshd_config
+
+you can use the file to only allow these people
+add this in the end of the file you can use the following directives
+
+AllowUsers
+DenyUsers
+
+DenyGroup
+AllowGroup
+
+write it like this
+AllowUsers
+using this means everyone is denied but these guys
+
+DenyUsers
+everyone is allowed but these guys
+
+....
+
+DenyUsers hacker root alex john
+
+use space to separate them
+
+
+#### for debian bases this still exists but not for redhat bases
+use a daemon for white list and other stuff as tcp wrap
+
+first change the host.allow add your self then host.deny
+
+
+vim /etc/host.allow
+SSHD: 192.168.9.7
+
+vim /etc/host.deny
+SSHD: ALL
+
+
+-------------
+if you check with client even when they have the key
+it will ask that password
+pass1
+----------------------------------
+Automatic logout
+use this for every service not just for ssh
+this is for when a service or whatever is idle for a specific amount of time log them out
+
+create a file here
+
+cd /etc/profile.d
+vim logout.sh
+
+right your bash script here
+
+TMOUT=300
+readonly TMOUT
+export TMOUT
+
+
+save the file and exit
+this will auto log it out after 300 seconds
+
+if you didnt want it anymore you just need to remove the file
+-----------------------------------------
+###################
+###### BANNER #######
+####################
+
+vim /etc/ssh/sshd.config
+search for Banner
+
+uncomment this line
+#Banner none
+
+change it to this
+Banner /etc/ssh/banner.txt
+save and exit
+
+create the file and write what you want like
+
+Authorized only!!! 
+
+but make it like this put a empty line on top and bottom of whatever you wrote for banner
+------------------------------------------
+
+#############################
+#### Multi factor authentication ######
+#############################
+
+
+linux 2fa/ mfa 
+
+1.installing google authenticator
+debian
+sudo apt-get install libpam-google-authenticator
+---
+centos / RHEL
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install google-authenticator
+-----------------------------------------------
+2.Edit the configuration files
+Edit /etc/pam.d/sshd
+
+add this to the end of the file
+# Google Authenticator
+auth required pam_google_authenticator.so
+
+Edit /etc/ssh/sshd_config and modify or add these directives:
+
+ChallengeResponseAuthentication yes
+UsePAM yes
+PasswordAuthentication no
+
+----------------------------
+3. Activate the two-factor authentication for a user
+
+google-authenticator
+scan the code and write down the codes (secret key and emergency codes)
+
+for questions
+update your felan file         y
+disallow mulitiple uses       y
+new token generated         y
+                                           y
+
+write down the recovery codes
+-----------------------------------------------------
+#############################
+#### Disable unwanted stuff #########
+#############################
+
+X11 Forwarding no
+Allow TcpForwarding no
+AllowStreamLocalForwarding no
+GatewayPorts no
+PermitTunnel no
+
+----------------------------------
+
+########################
+### Mitigate DOS for ssh ######
+########################
+
+MaxStartups 10:20:30
+
+10: Number of unauthenticated connections before we start dropping
+20: Percentage chance of dropping once we reach 10 (increases linearly for more than 10)
+30: Maximum number of connections at which we start dropping everything
+
+
+MaxStartups 10:20:30
+MaxAuthTries 10
+MaxSessions 30
+----------------------------
+#######################
+###### install fail2ban ######
+#######################
+
+dnf install fail2ban
+apt install fail2ban
+
+systemctl enable --now fail2ban.service
+
+vim /etc/fail2ban/jail.d/ssh.local
+
+systemctl restart fail2ban.service
+
+to check it 
+fail2ban-client banned
+unban it with this
+fail2ban-client unban 192.168.56.1
