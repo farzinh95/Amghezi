@@ -16,3 +16,97 @@ Unattended-Upgrade::Automatic-Reboot-Time "05:00";
 
 ---------------------
 
+
+
+
+
+Unattented updates 
+
+Debian
+
+apt install unattended-upgrades apt-listchanges
+
+
+configuaration files are in 
+/etc/apt/apt.conf.d/50unattended-upgrades
+if you want to exclude or include anything
+
+
+but its easier to config it from here
+
+dgpk-reconfigure -plow unattended-upgrades
+
+automaticlly install updates -> yes
+check the origin path and -> ok
+done
+
+
+test it like this
+unattended-upgrade -d
+
+=======================================
+Rocky
+
+
+sudo dnf install dnf-automatic -y
+
+sudo vim /etc/dnf/automatic
+
+[commands]
+#  What kind of upgrade to perform:
+# default                            = all available upgrades
+# security                           = only the security upgrades
+upgrade_type = security
+random_sleep = 0
+
+# Maximum time in seconds to wait until the system is on-line and able to
+# connect to remote repositories.
+network_online_timeout = 60
+
+# To just receive updates use dnf-automatic-notifyonly.timer
+
+# Whether updates should be downloaded when they are available, by
+# dnf-automatic.timer. notifyonly.timer, download.timer and
+# install.timer override this setting.
+download_updates = yes
+
+# Whether updates should be applied when they are available, by
+# dnf-automatic.timer. notifyonly.timer, download.timer and
+# install.timer override this setting.
+apply_updates = no
+
+------------------------------
+
+sudo systemctl enable dnf-automatic-install.timer
+
+
+sudo systemctl status dnf-automatic-install
+
+------------
+sudo systemctl cat dnf-automatic-install.timer
+
+Output
+[Unit]
+Description=dnf-automatic-install timer
+# See comment in dnf-makecache.service
+ConditionPathExists=!/run/ostree-booted
+Wants=network-online.target
+
+[Timer]
+OnCalendar=*-*-* 6:00
+RandomizedDelaySec=60m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
+
+
+=======
+
+
+live kernel upgrade
+
+sudo dnf install kpatch-dnf
+
+sudo dnf kpatch auto
