@@ -1,19 +1,163 @@
-SSH hardening
+SSH Hardening
 
 
-################
-## change port ######
-#################
+#############################
+####    change port    ######
+#############################
 
-vim /etc/ssh/sshd.config
+open /etc/ssh/sshd.conf
 
-port 22 
-change it to whatever you want
+port 22         #change it to whatever you want and open it on the firewall
 
--------------------------------------------
-##########################
-########creating a good key#####
-##########################
+--------------
+
+#################################
+#### Disable unwanted stuff #####
+#################################
+
+open /etc/ssh/sshd.conf
+
+X11 Forwarding no
+Allow TcpForwarding no
+AllowStreamLocalForwarding no
+GatewayPorts no
+PermitTunnel no
+
+
+-------------
+#############################
+####       Banner     #######
+#############################
+
+open /etc/ssh/sshd.conf
+
+search for Banner
+
+uncomment this line
+#Banner none
+
+change it to this
+Banner /etc/ssh/banner.txt
+save and exit
+
+create the file and write what you want like
+
+Authorized only!!! 
+
+but make it like this put a empty line on top and bottom of whatever you wrote for banner
+
+---------------
+
+
+###############################
+####  Automatic logout    #####
+###############################
+
+use this for every service not just for ssh
+this is for when a service or whatever is idle for a specific amount of time log them out
+
+create a file here
+
+cd /etc/profile.d
+vim logout.sh
+
+right your bash script here
+
+TMOUT=300
+readonly TMOUT
+export TMOUT
+
+
+save the file and exit
+this will auto log it out after 300 seconds
+
+if you didnt want it anymore you just need to remove the file
+----------------
+
+#######################################
+#### Multi factor authentication ######
+#######################################
+
+
+linux 2fa/ mfa 
+
+1.installing google authenticator
+debian
+sudo apt-get install libpam-google-authenticator
+
+
+centos / RHEL
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install google-authenticator
+
+
+2.Edit the configuration files
+Edit /etc/pam.d/sshd
+
+add this to the end of the file
+# Google Authenticator
+auth required pam_google_authenticator.so
+
+Edit /etc/ssh/sshd_config and modify or add these directives:
+
+ChallengeResponseAuthentication yes
+UsePAM yes
+PasswordAuthentication no
+
+3. Activate the two-factor authentication for a user
+
+google-authenticator
+scan the code and write down the codes (secret key and emergency codes)
+
+for questions
+update your felan file        y
+disallow mulitiple uses       y
+new token generated           y
+                              y
+
+write down the recovery codes
+
+------------------------------
+
+
+##############################
+### Mitigate DOS for ssh   ###
+##############################
+
+MaxStartups 10:20:30
+
+10: Number of unauthenticated connections before we start dropping
+20: Percentage chance of dropping once we reach 10 (increases linearly for more than 10)
+30: Maximum number of connections at which we start dropping everything
+
+
+MaxStartups 10:20:30
+MaxAuthTries 10
+MaxSessions 30
+----------------------------
+
+#############################
+###   install fail2ban    ###
+#############################
+
+dnf install fail2ban
+apt install fail2ban
+
+systemctl enable --now fail2ban.service
+
+vim /etc/fail2ban/jail.d/ssh.local
+
+systemctl restart fail2ban.service
+
+to check it 
+fail2ban-client banned
+unban it with this
+fail2ban-client unban 192.168.56.1
+-------------
+
+################################
+###   create a good key    #####
+################################
 
 
 ssh as your user first 
@@ -30,7 +174,7 @@ It will tell you the path
 
 it is in your home directory in .ssh/
 
------------------------
+
 CHECKING THE INTEGRITY OF THE KEY ON THE CLIENT SYSTEM AND SERVER
 
 on server
@@ -63,14 +207,14 @@ now check with the client if it is the same or not
 
 if on the user on server that they have ssh in to the server
 is .ssh folder you can see the known_hosts
----------------------------
-password less login
 
-now lets make it password less
-just using public and private key
+------------
+#################################
+####  password less login #######
+#################################
 
+open /etc/ssh/sshd.conf
 
-vim /etc/ssh/sshd_config
 
 in line 48
 #PubkeyAuthentication yes
@@ -117,12 +261,13 @@ to check what is working on this server
 ssh -Q cipher
 ssh -Q key
 ssh -Q kex
--------------------
+
+--------------------------
 ####################################
-###### ACCESS CONTROL FOR SSH##########
+###    ACCESS CONTROL FOR SSH    ###
 ####################################
 
-vim /etc/ssh/sshd_config
+open /etc/ssh/sshd.conf
 
 you can use the file to only allow these people
 add this in the end of the file you can use the following directives
@@ -140,9 +285,8 @@ using this means everyone is denied but these guys
 DenyUsers
 everyone is allowed but these guys
 
-....
 
-DenyUsers hacker root alex john
+DenyUsers root alex john
 
 use space to separate them
 
@@ -160,136 +304,7 @@ vim /etc/host.deny
 SSHD: ALL
 
 
--------------
+
 if you check with client even when they have the key
 it will ask that password
 pass1
-----------------------------------
-Automatic logout
-use this for every service not just for ssh
-this is for when a service or whatever is idle for a specific amount of time log them out
-
-create a file here
-
-cd /etc/profile.d
-vim logout.sh
-
-right your bash script here
-
-TMOUT=300
-readonly TMOUT
-export TMOUT
-
-
-save the file and exit
-this will auto log it out after 300 seconds
-
-if you didnt want it anymore you just need to remove the file
------------------------------------------
-###################
-###### BANNER #######
-####################
-
-vim /etc/ssh/sshd.config
-search for Banner
-
-uncomment this line
-#Banner none
-
-change it to this
-Banner /etc/ssh/banner.txt
-save and exit
-
-create the file and write what you want like
-
-Authorized only!!! 
-
-but make it like this put a empty line on top and bottom of whatever you wrote for banner
-------------------------------------------
-
-#############################
-#### Multi factor authentication ######
-#############################
-
-
-linux 2fa/ mfa 
-
-1.installing google authenticator
-debian
-sudo apt-get install libpam-google-authenticator
----
-centos / RHEL
-yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum install google-authenticator
------------------------------------------------
-2.Edit the configuration files
-Edit /etc/pam.d/sshd
-
-add this to the end of the file
-# Google Authenticator
-auth required pam_google_authenticator.so
-
-Edit /etc/ssh/sshd_config and modify or add these directives:
-
-ChallengeResponseAuthentication yes
-UsePAM yes
-PasswordAuthentication no
-
-----------------------------
-3. Activate the two-factor authentication for a user
-
-google-authenticator
-scan the code and write down the codes (secret key and emergency codes)
-
-for questions
-update your felan file         y
-disallow mulitiple uses       y
-new token generated         y
-                                           y
-
-write down the recovery codes
------------------------------------------------------
-#############################
-#### Disable unwanted stuff #########
-#############################
-
-X11 Forwarding no
-Allow TcpForwarding no
-AllowStreamLocalForwarding no
-GatewayPorts no
-PermitTunnel no
-
-----------------------------------
-
-########################
-### Mitigate DOS for ssh ######
-########################
-
-MaxStartups 10:20:30
-
-10: Number of unauthenticated connections before we start dropping
-20: Percentage chance of dropping once we reach 10 (increases linearly for more than 10)
-30: Maximum number of connections at which we start dropping everything
-
-
-MaxStartups 10:20:30
-MaxAuthTries 10
-MaxSessions 30
-----------------------------
-#######################
-###### install fail2ban ######
-#######################
-
-dnf install fail2ban
-apt install fail2ban
-
-systemctl enable --now fail2ban.service
-
-vim /etc/fail2ban/jail.d/ssh.local
-
-systemctl restart fail2ban.service
-
-to check it 
-fail2ban-client banned
-unban it with this
-fail2ban-client unban 192.168.56.1
