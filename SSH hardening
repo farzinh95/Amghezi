@@ -1,19 +1,40 @@
 SSH Hardening
 
 
-#############################
-####    change port    ######
-#############################
-
 open /etc/ssh/sshd.conf
 
+
+#############################
+####              change port                  ######
+#############################
 port 22         #change it to whatever you want and open it on the firewall
+
+
+
+this part is for red hat based
+
+
+let's say 2255 for this note
+
+allow it in selinux
+
+sudo semanage port -a -t ssh_port_t -p tcp 2255
+
+open the port on firewall 
+
+sudo firewall-cmd --zone=public --add-port=2255/tcp --permanent
+sudo firewall-cmd --reload
+
+
+restart the service
+sudo systemctl status sshd
+
 
 --------------
 
-#################################
-#### Disable unwanted stuff #####
-#################################
+#############################
+#### Disable unwanted stuff #########
+#############################
 
 open /etc/ssh/sshd.conf
 
@@ -26,7 +47,7 @@ PermitTunnel no
 
 -------------
 #############################
-####       Banner     #######
+####                    Banner                      ######
 #############################
 
 open /etc/ssh/sshd.conf
@@ -49,9 +70,9 @@ but make it like this put a empty line on top and bottom of whatever you wrote f
 ---------------
 
 
-###############################
-####  Automatic logout    #####
-###############################
+#############################
+####            Automatic logout         ######
+#############################
 
 use this for every service not just for ssh
 this is for when a service or whatever is idle for a specific amount of time log them out
@@ -63,20 +84,20 @@ vim logout.sh
 
 right your bash script here
 
-TMOUT=300
+TMOUT=600
 readonly TMOUT
 export TMOUT
 
 
 save the file and exit
-this will auto log it out after 300 seconds
+this will auto log it out after 600 seconds
 
 if you didnt want it anymore you just need to remove the file
 ----------------
 
-#######################################
+#############################
 #### Multi factor authentication ######
-#######################################
+#############################
 
 
 linux 2fa/ mfa 
@@ -110,19 +131,21 @@ google-authenticator
 scan the code and write down the codes (secret key and emergency codes)
 
 for questions
-update your file              y
+update your felan file         y
 disallow mulitiple uses       y
-new token generated           y
-                              y
+new token generated         y
+                                           y
 
 write down the recovery codes
 
 ------------------------------
 
 
-##############################
-### Mitigate DOS for ssh   ###
-##############################
+########################
+###      Mitigate DOS for ssh      ###
+########################
+
+in /etc/ssh/sshd_config
 
 MaxStartups 10:20:30
 
@@ -136,9 +159,9 @@ MaxAuthTries 10
 MaxSessions 30
 ----------------------------
 
-#############################
-###   install fail2ban    ###
-#############################
+#######################
+###           install fail2ban         ###
+#######################
 
 dnf install fail2ban
 apt install fail2ban
@@ -155,85 +178,56 @@ unban it with this
 fail2ban-client unban 192.168.56.1
 -------------
 
-################################
-###   create a good key    #####
-################################
+##########################
+###         password less login      #####
+##########################
 
+On your own system (not the server) run this 
 
-ssh as your user first 
-
+if linux
 create a new key 
-ssh-keygen –t rsa 4096 
+ssh-keygen –t rsa -b 4096
+
+if windows 
+ssh-keygen -b 4096
+
+let it save or change path
+give it a password
+
+keys are created now you have to copy them to the server
 
 
-If you want to change the path change it I don’t want to change 
-Created directory didn’t want to change 
-Enterpassphrase : always type in a passphrase for the key            pass1
-You can see that 2 files have been created 
-It will tell you the path 
-
-it is in your home directory in .ssh/
+for linux ssh-copy-id farzin@192.168.56.104
+enter your password
 
 
-CHECKING THE INTEGRITY OF THE KEY ON THE CLIENT SYSTEM AND SERVER
 
-on server
-it will give you the fingerprint that you can check the integrity as bellow
-
-first go to cd .ssh
-if you ls you can see the 2 files
-
-ssh-key -lvf
-l is for checking integrity 
-v is for visualize random art
-f is for file
-
-now run the command for files
-
-ssh-keygen -lvf id_rsa.pub
-
-id_rsa.pub is the file name
-
-check that it is the same on client befor using it
-
-when on client ssh user@...
-you can see the finger print and every thing
-
-me on server will go to /etc/ssh/
-ls
-ssh-keygen -lvf ssh_host_ecsda.key.pub ### this is the file name
-
-now check with the client if it is the same or not
-
-if on the user on server that they have ssh in to the server
-is .ssh folder you can see the known_hosts
-
-------------
-#################################
-####  password less login #######
-#################################
-
-open /etc/ssh/sshd.conf
+for windows
+use scp
+scp $env:USERPROFILE/.ssh/id_rsa.pub farzin@192.168.56.104:~.ssh/authorized_keys
 
 
-in line 48
-#PubkeyAuthentication yes
-un comment it
 
-in line 70
-change PasswordAuthentication to no
+on the server
+open sshd_config file
+change these
 
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
 
-in line 43
-change PermitRootLogin to no
+restart sshd service and try it in another terminal
+-------------------------------------------
+#############################
+###              disabling weak keys              ###
+#############################
 
-
-disabling weak keys
+open /etc/ssh/ssh_config
 
 in line 26
 or search for ciphers or jusr write it in the end of the file
 
-Ciphers aes256-cbc,aes-256-ctr
+Ciphers aes256-cbc,aes256-ctr
 KexAlgorithms ecdh-sha2-nistp521,ecdh-sha2-nistp384
 
 ### for KexAlgorithm choose one of them not both of these
@@ -244,13 +238,8 @@ cd /lib/systemd/system
 vim sshd.service
 
 EnvironmentFile= la blah blah
-copy the path la blah blah
 
-vim /etc/crypto-policies/back-ends/opensshserver.config
-in this file you can see which algorithms which macs which public keys ... is supported
-
-delete the ones you dont want and just keep
-aes-256-ctr,aes256-cbc
+if you had $crypto remove it you will be ok it will be in the line with $options
 
 
 restart ssh service with the following command
@@ -264,7 +253,7 @@ ssh -Q kex
 
 --------------------------
 ####################################
-###    ACCESS CONTROL FOR SSH    ###
+###              ACCESS CONTROL FOR SSH                 ###
 ####################################
 
 open /etc/ssh/sshd.conf
@@ -286,7 +275,7 @@ DenyUsers
 everyone is allowed but these guys
 
 
-DenyUsers root alex john
+DenyUsers hacker root alex john
 
 use space to separate them
 
