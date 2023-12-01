@@ -5,7 +5,7 @@ open /etc/ssh/sshd.conf
 
 
 #############################
-####              change port                  ######
+####  change port      ######
 #############################
 port 22         #change it to whatever you want and open it on the firewall
 
@@ -32,9 +32,9 @@ sudo systemctl status sshd
 
 --------------
 
-#############################
+#####################################
 #### Disable unwanted stuff #########
-#############################
+#####################################
 
 open /etc/ssh/sshd.conf
 
@@ -47,7 +47,7 @@ PermitTunnel no
 
 -------------
 #############################
-####                    Banner                      ######
+####      Banner       ######
 #############################
 
 open /etc/ssh/sshd.conf
@@ -70,9 +70,9 @@ but make it like this put a empty line on top and bottom of whatever you wrote f
 ---------------
 
 
-#############################
-####            Automatic logout         ######
-#############################
+####################################
+####     Automatic logout     ######
+####################################
 
 use this for every service not just for ssh
 this is for when a service or whatever is idle for a specific amount of time log them out
@@ -95,9 +95,9 @@ this will auto log it out after 600 seconds
 if you didnt want it anymore you just need to remove the file
 ----------------
 
-#############################
+######################################
 #### Multi factor authentication ######
-#############################
+#######################################
 
 
 linux 2fa/ mfa 
@@ -141,9 +141,9 @@ write down the recovery codes
 ------------------------------
 
 
-########################
+######################################
 ###      Mitigate DOS for ssh      ###
-########################
+######################################
 
 in /etc/ssh/sshd_config
 
@@ -159,9 +159,9 @@ MaxAuthTries 10
 MaxSessions 30
 ----------------------------
 
-#######################
+##########################################
 ###           install fail2ban         ###
-#######################
+##########################################
 
 dnf install fail2ban
 apt install fail2ban
@@ -178,9 +178,9 @@ unban it with this
 fail2ban-client unban 192.168.56.1
 -------------
 
-##########################
+##########################################
 ###         password less login      #####
-##########################
+##########################################
 
 On your own system (not the server) run this 
 
@@ -218,9 +218,9 @@ PasswordAuthentication no
 
 restart sshd service and try it in another terminal
 -------------------------------------------
-#############################
-###              disabling weak keys              ###
-#############################
+####################################################
+###              disabling weak keys             ###
+####################################################
 
 open /etc/ssh/ssh_config
 
@@ -252,9 +252,9 @@ ssh -Q key
 ssh -Q kex
 
 --------------------------
-####################################
+###########################################################
 ###              ACCESS CONTROL FOR SSH                 ###
-####################################
+###########################################################
 
 open /etc/ssh/sshd.conf
 
