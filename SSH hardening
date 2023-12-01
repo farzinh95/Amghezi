@@ -110,7 +110,7 @@ google-authenticator
 scan the code and write down the codes (secret key and emergency codes)
 
 for questions
-update your felan file        y
+update your file              y
 disallow mulitiple uses       y
 new token generated           y
                               y
