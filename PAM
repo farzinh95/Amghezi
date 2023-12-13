@@ -1,0 +1,132 @@
+PAM (pluggable authentication module)
+
+cd /etc/pam.d
+
+this is where configuration for authentication is open this file
+this files runs line by line so it matters who is higher in the lines (it has priority)
+so if the authentication failes it won't check the other lines
+
+vim system-auth
+
+1st column is module interface
+stuff like auth (this is for identity validation), account (this is for account validation like lock or other stuff), password (this is for password verification), session (this is for session management)
+
+
+2nd column is the control flag
+stuff like 
+requisite (this is for this is for if it failed stop everything and kill the process)
+required (this is for if it failed send an error and stop the process)
+sufficient (this is for if it passed up to here dont check other stuff give the ok)
+optional (this is for getting a log or something this will ignore if it failed)
+default (this is for if it failed ignore it some thing like this [success=1 default=ignore])
+
+3rd column is the module name
+you can see the modules in /lib64/security
+
+stuff like pam_env.so
+if we cat the file in /lib64/security
+we can see it with
+man pam_env
+in this manual you can see that this module means set or unset environment variables
+
+man pam_unix
+this is the traditional password checking
+
+check the other ones like this too
+
+
+other columns
+depends on the 3rd column these are options of that module you can see them in the module manual
+--------------------
+faillock and enforcing longer password using PAM
+
+in this line
+
+password        requisite       pam_pwquality.so    try_first_pass local_users_only retry=5 authtok_type=OPS
+
+retry default for me was 3 this is going to change it to 5 times
+DONT MAKE IT 5 THIS IS JUST AN EXAMPLE
+because of pam_deny which is lower than that one after few wrong passwords pam_deny will give error and fails it
+
+password        sufficient       pam_unix.so try_first_pass use-authtok nullok sha512 shadow
+
+remove the null ok so that it wont accept blank passwords
+DONT FORGET THIS REMOVE nullok
+
+now go to /etc/pam.d
+run this
+grep pwquality *
+
+you can see the complexity configuration in different files
+
+
+you can enforce password policies here to make them longer for example
+
+
+#################################################
+###  password-auth is for remote connections like ssh telnet ...          ###
+###  system-auth is for console and other system authentications     ###
+#################################################
+you can see that the content of both of them are the same in default
+
+
+and change properly for stuff like pam_faillock
+
+ALWAYS USE THIS to lock out accounts that they had unsuccessfull logon in 15min
+lock the account and unlock the user after sepecific time
+
+read the manual of pam_faillock
+
+
+vim password-auth
+
+after the first one write this
+this is the first one
+auth    required    pam_env.so
+
+after that add this line
+auth    required    pam_faillock.so preauth silent audit deny=fail_interval=300 unlock_time=300
+
+this means that if they loged in with 4 unsuccessfull passwords in 5 min lock the account for 5 min
+USE BETTER NUMBERS THIS IS JUST AN EXAMPLE
+
+add another line after this one
+auth    sufficient    pam_unix.so try_first_pass
+
+add this line after that
+auth    [default=die]   pam_faillock.so authfail audit deny=4 fail_interval=300 unlock_time=300
+
+or just dont mention fail interval and write just unlock time this means if anyone had 4 unsuccessfull login lock it for 5 min
+
+
+use fail lock one more time after this line
+account     required        pam_unix.so
+account     required        pam_faillock.so
+
+
+end result is this
+
+auth        required      pam_env.so
+auth        required      pam_faillock.so  preauth silent audit deny=4 fail_interval=300  unlock_time=300
+auth        sufficient    pam_unix.so try_first_pass
+auth        [default=die] pam_faillock.so  authfail audit  deny=4 unlock_time=300
+auth        required      pam_deny.so
+
+account     required      pam_unix.so
+account     required      pam_faillock.so
+
+if you wanted to use the same for system lock copy the file as the otherone
+
+to unbock a user use this
+
+you can see the users that have been blocked with this
+faillock
+
+to just see if he is locked or not
+
+faillock --user john
+
+to unlock john use this
+
+faillock --user john --reset
+----------------------------
