@@ -126,7 +126,7 @@ echo "net.ipv4.ip_local_port_range = 2000" >> /etc/sysctl.d/farzin.conf
 echo "net.ipv4.ipfrag_high_thresh = 1000000" >> /etc/sysctl.d/farzin.conf
 
 # Sets the low threshold for IP fragment memory to prevent fragmentation-based attacks.
-echo "net.ipv4
+echo "net.ipv4.neigh.default.gc_thresh3 = 8192" >> /etc/sysctl.d/farzin.conf
 
 
 #run it in the running config
