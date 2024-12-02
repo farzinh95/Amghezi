@@ -1,0 +1,1806 @@
+Intune notes
+
+
+Documentation link
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/what-is-intune
+
+
+You must have the subscription go add your domain name in your account
+
+Create a AD then install azure id / entra id connect and login with your credentials
+
+
+
+AZURE ID IS NOW CALLED ENTRA ID
+PORTAL.AZURE.COM IS NOW ADMIN.AZURE.COM
+
+
+##################################################################################
+####                                                                          ####
+####           Autopilot deployment of windows using microsoft intune         ####
+####                                                                          ####
+##################################################################################
+
+
+
+Add a devices to autopilot
+
+you should add the hardware / device ID in intune so that it get recognised.
+
+
+you can get device ID for autopilot script
+
+
+Install-Script -Name -Get-WindowsAutopilotInfo
+
+cd\
+
+mkdir ID
+
+Get-WindowsAutoPilotInfo.ps1 -OutputFile c:\id\deviceid.csv
+
+-----------------------
+Now add the device in the panel
+
+Devices / Enroll devices / Devices
+
+
+import your csv file
+
+========================================================
+
+Creating a deployment profile
+
+you want a deployment profile to do that you must have different groups to manage devices
+
+in intune
+First go to groups
+create a new group
+
+IT MUST BE A SECURITY GROUP because only security groups can have devicess in it
+
+
+Give it group name like AutopilotManaged
+
+Membership type Dynamic Device
+
+go to Add a query
+
+search this on google
+autopilot dynamic security group
+
+the microsoft article explain the whole thing but to make it easier I copy the stuff here too (the stuff between ###)
+
+###
+When creating expressions:
+
+To create a group that includes all of the Autopilot devices, enter: (device.devicePhysicalIDs -any (_ -startsWith "[ZTDid]")).
+
+Intune's group tag field maps to the OrderID attribute on Microsoft Entra devices. To create a group that includes all Autopilot devices with a specific group tag (the Microsoft Entra device OrderID), enter: (device.devicePhysicalIds -any (_ -eq "[OrderID]:179887111881")).
+
+To create a group that includes all the Autopilot devices with a specific Purchase Order ID, enter: (device.devicePhysicalIds -any (_ -eq "[PurchaseOrderId]:76222342342"))
+
+Save the expressions.
+###
+
+
+
+add the following expression
+
+(device.devicePhysicalIDs -any (_ -startsWith "[ZTDid]")).
+
+
+save and create the group
+
+now you can go to Devices in the windows deployment
+/ Enroll devices / Deployment Profiles
+
+Create profile
+
+Windows PC
+
+        Basics
+
+give it a name
+
+
+note:
+convert all target devices to autopilot = if you choose yes it will only make a difference if you reset the devices.
+so for me I chose yes
+
+-------------
+
+            OOBE
+Deployment mode = there are 2 options User-Devices / Self-Deployment
+
+if you choose user-Driven user will have more options
+
+
+so choose user-Driven
+Join to azure id / entra id Azure AD joined
+
+Privacy settings = Hide
+Hide change account options = Hide
+User account type = Standard
+Allow pre-provisioned deployment = this is for if you want wipe any other apps and stuff but for now choose no
+
+Language = choose what you want
+Automatically configure keyboard layout =  Yes
+Apply device name template =  Yes
+
+
+Enter a name
+
+make it like this so that it changes the system name that makes life easier like this (if our company name is LUFFY)
+
+LUFFY-%RAND.5%
+
+which will make the system names LUFFY-a random 5 digit number
+
+
+-----
+
+        Assignments
+
+Add group
+add the group you created before
+
+
+### there are 2 types included groups and excluded group
+
+excluded group over rides the included group
+
+if a device is in 2 different group it will go to excluded group
+
+-----
+
+Create your profile
+
+
+make sure autoenrollment is turned on
+
+Device / Enroll devices / Enroll devices / windows enrollment
+
+make sure it is on All for both MDM user scope and MAM user scope
+
+
+
+go to azure Active directory
+
+go to company branding
+
+you can customise the default sign in experience if you wanted to make something cool like sign in oage text like  
+
+WELCOME TO OUR COMPANY
+
+or what ever different thing you want
+
+========================================================
+
+Enrollment status page
+
+this for when the device just turned on and connected to the autopilot for the first time you can change different stuff you want, there is a default and it's prety good change if you wanted.
+
+========================================================
+
+Do a sysprep on your windows client machine and you can see what will happen with the whole thing just like if the system was added the first time and adds the machine to autopilot
+
+========================================================
+
+
+###############################################################################
+####                                                                       ####
+####   Managing intune RBAC connecting with azure ad and remote help       ####
+####                                                                       ####
+###############################################################################
+
+RBAC = role based access control
+
+roles explanation
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/role-based-access-control
+
+
+Basically if you go to your panel (portal.azure.com   now it has been changed it might change later again its admin.azure.com)
+
+
+in the menu button go to azure active directory go to roles and administrators
+
+Global administrator is the strongest user (domain and intune)
+
+
+there is another one which is very important is Intune Administrator
+it's obvious it's for intune service administrator (it's full control for intune not for the domain)
+
+
+
+if you go to endpoint.microsoft.com
+in the Tenant administration you can check the roles and choose the proper one for each person
+
+---------------
+
+                    Scope tag
+
+
+
+Maybe you have different sites and admins and lets say if you have a London office and you want the Lodon's admin to have access to London ones you can do that in scope tags
+
+
+By default they have it for everywhere so create a scope tag in 
+
+Tenant admin / roles / endpoint manager roles / scope tag
+
+name = write the name of the location like London 
+Next
+
+assignments you can add the proper group that you have in azure AD
+
+the group is in Groups / new group 
+
+it can be security or microsoft 365 because it's for users it can be any
+
+security
+Group name = London admins
+
+add the proper users 
+
+now in the scope tag you can add the group
+
+save the thing
+
+
+now if you go to all roles
+
+create your own role
+
+name it London admins
+choose the roles you want like compliance, device config, device enrollment manager, endpoint analytic, ...
+
+in the next step after permission remove the Default and add the London
+
+create the thing
+
+
+now you have the role go to the role and assign it
+Name London admins assignment
+
+then add the admin group (London admins)
+
+scope groups now choose the security group that you created for London devices
+
+you can choose all devices in scope groups and choose London in the Scope tags
+
+now go to devices / windows / choose your desired device
+
+in the properties scope tags is on Default, so just add it to London group or just remove the Default
+
+========================================================
+
+        ENROLLMENT TO AZURE AD (ENTRA ID)
+
+
+here is the link for it
+
+https://learn.microsoft.com/en-us/mem/intune/enrollment/quickstart-setup-auto-enrollment
+
+
+
+go to portal.azure.com
+
+go to azure active directory
+
+in all devices you can see every system
+
+
+if you wanted to manually add a system to azure AD (not with autopilot)
+
+settings / accounts / access work or school
+
+connect and authenticate with your credentials
+
+
+be default if you add a system to just intune and not to azure ad
+
+use Enroll only in device management
+
+if you just wanted to join the system to azure AD and not to intune you can do that too
+
+
+REMINDER
+if you want that every system you add to intune joins the system to add to azure AD in the 
+
+azure active directory in the mobility you can add what MDM product you are using but here we are using Intune click on it and make sure that it is on all so that every system get's joined to our domain
+
+
+if we want a user that is joined to our AD and we want it to joint to intune
+we can do that too
+in endpoint.microsoft.com 
+in devices / enroll devices / automatic devices
+
+make sure it's on all for MDM and MAM
+
+if the user has license for intune, you can check in the users open your user and you can see if you have the license
+
+
+####
+cool command to see the Azure AD status
+dsregcmd /status
+
+but sometimes it takes a long time until it tell it sometime it's joined this command show it after ours
+
+
+========================================================
+
+gpo for auto enrollement group policy on a single pc
+
+
+https://learn.microsoft.com/en-us/entra/identity/devices/how-to-hybrid-join
+
+
+
+gpedit.msc
+
+local computer / Administrative / windows components / MDM 
+enable automatic ...
+
+for domain first login in azure ad connect
+config hyber azure ad
+device systems check the windows 10 and later
+scp config 
+
+check the forest and choose authentication service with azure AD add it will ask for admin user pass 
+
+next wait then configure
+
+now go to gpmc.msc create a new policy called AutoEnrollment
+
+Computer / Administrative / windows components / MDM 
+enable automatic ...
+
+user credential
+
+
+save and assign it to the ou that you want
+
+
+REMINDER 
+MAKE SURE Microsoft Azure AD Sync is running othee wise it won't sync to the Azure AD
+
+to manually sync our dc with our Azure AD
+
+Start-ADSyncSyncCycle -PolicyType Delta
+
+
+
+
+
+soooo
+we have a system that is joined to our domain but not our azure AD
+
+
+first find the user in azure AD and make sure it has the license
+(it's user in our AD so first creat the user sync it to Azure AD)
+
+
+you can do that in portal.azure.com
+azure ad / licensess / all products 
+Enterprise mobility + security E5
+
+add the user here
+select and assign it here
+
+
+
+now if you go to the client system that is joined to domain and not the Azure AD just login with that user on that system
+
+
+there is another way that you can install intune company portall from microsoft store install the app and put your credentials and if you have the license it will work
+
+
+here is the link for these stuff
+
+========================================================
+
+
+Intune connector for active directory
+
+
+https://learn.microsoft.com/en-us/autopilot/windows-autopilot-hybrid
+
+
+go to intune admin center (endpoint.microsoft.com)
+
+in the devices / enroll devices / windows enrollment / intune connector for AD
+
+download the on premise intune connector for AD
+
+
+go on the DC
+create a ou name it something like
+Autopilot Domain Join
+Delegate control for it
+remember to add computers in object types
+add our DC
+
+next
+only the following
+check computer objects
+check create selected objects in this folder
+check delete selected objects in this folder
+
+next
+
+permissions scheck them all
+
+next
+
+Turn of IE enhanced security config in the server manager Local server and turn it off
+
+
+install the intune connector and login to your account
+
+========================================================
+
+Managing Local groups membership with intune for windows devices
+
+
+like doing restricted group in group policy
+
+go to intune admin center (endpoint.microsoft.com)
+
+Endpoint security / Account protection
+
+create policy
+windows 10 and later
+profile local group membership
+
+create
+
+        Basics
+
+Name : London admins or whatever
+
+        Configuration settings
+add
+administrators or whatever group you want
+Add(update)
+user selection go with user/groups
+
+and select the user you want
+
+you can use scope tags if you have different sites and places you want like mrA be admin for London add London scope here (Scope tags note have been writen before)
+
+            assignments
+add the groups you want or all users and all devices
+
+next and create
+
+
+to force sync group policy on a device
+
+go to devices / windows / windows devices and sync the device there but it's windows maybe you need to restart the system
+
+========================================================
+
+Remote help in intune
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/remote-help
+
+
+
+depends on the license you have the license should have the remote help Add-on 
+
+Intune suite and standlone add-on has it
+
+if you dont have it if you go to microsoft 365 admin center (portal.microsoft.com)
+in the billing purchase services search remote help add on
+
+buy the thing now you can use it
+
+create a user in users active users 
+name the user and everything
+
+next
+
+assign the license to the user
+
+next and fininsh
+
+
+go back to licenses and assign it to your admin users
+
+In the Microsoft intune admin center (endpoint.microsoft.com)
+
+in the tenant administration / remote help / settings
+
+enable it
+
+allow remote help to unenrolled devices and disable chat no
+
+
+
+now go to groups create a group
+security group
+remote help operators
+
+assign the members
+
+and create
+
+
+in the tenant administration in roles
+all roles / help desk operator (the user) open it 
+
+in assignments
+assign
+name it help operators for remote help permissions
+
+admin groups
+add the groups and user that you want
+
+scope groups and scope tags as needed next and finish
+
+download the remote help app from the link above
+
+install the app
+open the app (remote help)
+
+sign in to your account
+
+now on your client side you have to install the same app
+login with their account
+
+and use code to connect to the other system from admin side
+click on full control
+the person who needs help has to allow it
+
+and it works just like anydesk you don't need to open any port or anything
+
+
+it can be used without the user
+
+you can go to intune admin cernter (endpoint.microsoft.com)
+devices/ windows / windows devices / choose your device and in the ... you have a new remote assistance session and you can use that to connect to client system
+
+========================================================
+
+Compliance policies in intune
+
+https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started
+
+
+in the intune admin center (endpoint.microsoft.com)
+
+Groups / all groups create a group or choose the group you want
+
+add the users and computers that you want
+
+for example let's make sure all the devices and users that are in this group, must have their firewall on
+
+
+go to Devices / compliance policies
+
+Create policy select your platform (windows 10 or later)
+name it something like London devices firewall compliance
+next
+
+if you have a script you can use it here too but we dont want that now but this is how you do it
+
+custom compliance Required
+select your discovery script
+
+or just open the links and choose what you want here we want to make sure firewall is on 
+
+Device health turn on what you want like minimum and maximum os other stuff choose what you want and make it required
+
+password part is very important
+
+in the device security make firewall required
+use it to force other stuff too like anivirus and other stuff
+
+
+next
+
+Actions for non compliance
+
+you can choose that an email be sent to the user or
+Add device to retire which means if they have their firewall off intune will stop giving service to it you can use it if the firewall was off for 2 days then do it depends on you
+
+next 
+scope tags again depends on what you want
+
+assignments
+add the group that you want and create
+
+========================================================
+
+Conditional Access policies in intune
+
+
+MAKE SURE YOU DON'T LOCK YOURSELF OUT
+
+
+Creating conditional access policy
+it can be done drom almost every where
+
+portal.azure.com in entra ID / security / conditional access
+entra.microsoft.com in protection / conditional access
+intune.microsoft.com in devices / conditional access
+
+
+Give it a name 
+assign it to whoever you want make sure if you choose all users you exclude yourself
+
+target resources depends on what you want with cloud apps you can choose microsoft cloud stuff like office 365, windows 365, ... 
+
+conditions this means when the policy should apply like if there is a sign in risk apply the policy
+
+
+grant do you want to block or grant it, block is obvious, grant is good for implementing stuff like mfa or authentication strenght, require pass change, which apps are approved, ...
+
+make sure you choose the all the requirements
+
+session this controls different sessions but it only works with supported apps in microsoft, ...
+
+
+in the end there are 3 options on off and read only choose what you need.
+
+
+ALWAYS ADD AT LEAST THESE
+
+ACTIVEE FIREWALL REQUIRED
+ANTISPYWARER EQUIRED
+ANTIVIRUS REQUIRED
+
+all in device security part
+
+========================================================
+
+Managing the notifications for compliance
+
+in endpoint.microsoft.com
+
+Devices / compliance policies / notifications
+
+create one
+name it
+choose your email options
+
+choose your language and message
+
+choose your scope tage
+
+and create
+
+now go here Devices / compliance policies / policies
+
+choose your policy
+go to properties, actions  for noncomplience
+
+choose the send email to end user choose your time and in the message template you can choose the one your wrote before in this part save and done :D
+
+========================================================
+
+Monitoring compliance
+
+
+endpoint.microsoft.com
+
+in the first page it shows how many machines are not compliant
+
+choose the machine go to device compliace and see what's going on
+
+you can check it in the Devices / compliance policies / policies / name of the policy / user status or device status too
+
+you can check it in reports / device compliance too but it takes a while to update here you can gererate the report and export it if you want.
+
+========================================================
+
+compliance troubleshooting
+
+now we know that a machine is not compliant
+
+in the endpoint.microsoft.com
+Devices / windows (for example) / you can see which machine is not compliant choose the device see why the machine is not compliant
+
+it will take a little while after we fix the issue to make it faster that it knows to allow the user to access stuff
+
+go to device / windows / choose the device and sync
+but it will still take a while :D
+
+
+if you wanted to delete a policy
+endpoint.microsoft.com
+
+Devices / compliance access / policies
+Devices / conditional access / policies
+delete the policy in these 2 places
+
+========================================================
+
+#############################################################
+####                                                     ####
+####        Intune enrolment management                  ####
+####                                                     ####
+#############################################################
+
+
+Microsoft Intune Admin center (endpoint.microsoft.com)
+
+Windows enrollment we saw how it was before easiest is to turn it on when a system joins the domain gets enrolled
+
+https://learn.microsoft.com/en-us/mem/intune/enrollment/quickstart-setup-auto-enrollment
+
+
+you can have windows hello for business its for mfa
+
+Cname validation if you have a premium version of AD you wont need it, you only need it if you have a on premis DNS server, and you have to change it for the server, it's because in our on premis when the system is on and the system goes to check the domain name DNS server will show the DC and it can't find the intune in the cloud that's why you should write the name of the domain and check if it working or not in the internet.
+
+you can check the enrollment status there
+autopilot we saw before
+
+
+now let's go for the other supported OS in intune
+-------------------------------------
+Apple enrollment
+
+https://learn.microsoft.com/en-us/mem/intune/enrollment/apple-mdm-push-certificate-get
+
+
+first you have to have Apple MDM push certificate
+you have to agree with them then download your csr then log on the apple website (with your apple id) create a push certificate, upload your file login again and download the request
+
+
+upload the certificate you downloaded from apple (devices / enroll devices / apple devices)
+
+now apple devices can be enrolled in intune too
+
+-------------------------------------
+For Android enrollment
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/deployment-guide-enrollment-android
+
+in the admin center
+
+Manage google play / agree / and login to your google account
+it will ask for your domain name next
+fill in the name and email and stuff
+and complete the registration
+
+now your android devices can be enrolled
+
+
+-------------------------------------
+Enrollment device limit registration
+
+Default restriction in on 5
+you can change the restriction its prety easy
+name it give how many number you want choose your scope and assignments and create
+
+-------------------------------------
+Enrollement device platform restrictions
+
+you can have resctrictions on android windows mac ios maybe they add new stuff later
+
+
+you can edit the default and like block a device or give it a min or max of that os
+
+you can block personal devices here too it's in the next part
+
+-------------------------------------
+Corporate device identifiers 
+
+
+basically you add the IMEI or serial numbers so only these devices can get enrolled
+
+-------------------------------------
+Device enrollment managers
+
+https://learn.microsoft.com/en-us/mem/intune/enrollment/device-enrollment-manager-enroll
+
+
+you can add admins here so that, this person can enroll other devices for them, WITH THEIR OWN CREDENTIALS the admin is not gonna ask the user what their credentials is
+
+IT ONLY ALLOWS YOU TOO ADD 1000 DEVICES up to now it cant be changed
+
+========================================================
+
+Manual enrollment
+
+
+Windows enrollment
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/deployment-guide-enrollment-windows
+
+settings / Accounts / access work or school
+
+if it is on all on windows enrolment in intune admin center, if you have hybrid network you have to turn it on in group policy for the users
+
+or download the intune company portal from microsoft store and login there
+
+-------------------------------------
+IOS device
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/deployment-guide-enrollment-ios-ipados
+
+install intune company portal app
+login
+download the management profile (it's a certificate)
+so you do have to the ios settings and install the Management profile in VPN settings
+
+-------------------------------------
+Android device
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/deployment-guide-enrollment-android
+
+same as ios
+-------------------------------------
+Mac device
+
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/deployment-guide-enrollment-macos
+
+
+-------------------------------------
+Linux enrollment
+
+https://learn.microsoft.com/en-us/mem/intune/fundamentals/deployment-guide-enrollment-linux
+
+
+========================================================
+
+Bulk enrollment to intune
+
+Windows
+
+like how we saw before automatic enrollment should be on all
+
+if you have a hybrid joined device you have to use group policy
+
+https://learn.microsoft.com/en-us/windows/client-management/enroll-a-windows-10-device-automatically-using-group-policy
+
+
+the policy is here
+
+Computer config / policies / administrative template / windows component / MDM / Enable automatic MDM ...
+
+
+for the machines that are not part of the domain (not on premis not joined)
+
+https://learn.microsoft.com/en-us/mem/intune/enrollment/windows-bulk-enroll
+
+install the windows configuration designer app from store
+
+open the app
+provision desktop device
+name it
+
+set  up device
+you can change the device name, product key,...
+network give your ssid and pass for wifi,
+account management you can enroll in AD or Azure AD (Entra ID it's all the same)
+
+you can create a local admin on the device here
+
+add applications you can use this for it
+add certifications same
+
+in the end give it a pass so that it be encrypted
+
+so just go to the file that you saved copy the file on a usb or something and run the provisioning package
+
+(The file that says AutoEnrollmentProvisioning)
+
+by the way you can do all of these in autopilot as well but this is just another way of doing it
+
+
+-------------------------------------
+Apple devices
+
+in the intune admin center / devices / enroll devices/ apple enrollment / apple configurator / devices
+
+just add their IMEI here or import csv file if you have
+
+profile / create 
+give it a name
+user affinity there are 2 options
+
+enroll with user affinity is for when company bought the devices (corporate device) and only one user is gonna use it (the device is gonna be linked to the user)
+
+enroll without user affinity is for when device is for shared devices
+
+you can select how they must authenticate
+company portal is when they install the app
+
+setup assistance is for devices that are new and we added the serial and they can do it with the wizard
+
+
+Enrollement program tokens
+
+add and download your public key
+create the token
+fill the application,...
+
+it's mostly for schools
+
+-------------------------------------
+Android
+
+https://learn.microsoft.com/en-us/mem/intune/enrollment/android-dedicated-devices-fully-managed-enroll
+
+
+there is a zreo touch thing 
+
+there is one for personal owned
+one for company owned
+
+different options not complicated at all
+
+
+
+========================================================
+
+
+Policies in Intune
+
+this is best used for each offices
+
+the idea is to just grouping bunch of objects together
+
+
+
+like if we have a London office
+
+go to endpoint.microsoft.com
+devices / policy sets / create
+
+name it like London policy set
+you can install the apps that are available, or protection policies and stuff
+
+device management configuration profiles and stuff
+
+you can add a autopilot enrollment profile
+
+use the tag for them
+
+assignment use the group for the London office 
+
+create
+
+========================================================
+
+Using intune to delete, restart, sync, retire or wipe devices
+
+
+Devices / windows / windows devices 
+choose your device
+you the options on top
+
+retire means we keep the info but we are not gonna use it again
+it will not delete is not gonna delete any personal stuff just the company stuff
+
+
+
+delete is for devices that we don't want it to be in intune, 
+its like retire but the info is gonna be deleted in tune too.
+
+the wipe will wipe the device clean.
+
+========================================================
+
+
+##############################################
+####                                      ####
+####        Device configuration          ####
+####                                      ####
+##############################################
+
+
+IF THERE IS A CONFLICT BETWEEN DOMAIN GPO AND INTUNE POLICY
+DOMAIN GPO WILL WIN
+
+
+
+IF THERE ARE DIFFERENT POLICIES IN INTUNE THAT THEY CONFLICT
+
+
+COMPLIANCE ARE GONNA WIN OVER CONFIGURATION PROFILE
+
+
+
+
+
+Creating a device configuration profile
+
+Intune admin center (endpoint.microsoft.com)
+
+Devices / configuration profiles
+
+create
+you can see the platforms you can make profile for
+
+let's go with windows for now
+
+profile type -> template or settings catalog
+
+template for now 
+
+for windows this is where you can push group policy and different stuff
+
+turn things on or off
+
+you can control updates
+
+domain join
+
+email management
+endpoint management
+certificate settings
+
+vpn , wifi , ....
+
+
+Device restrictions 
+is the one we do now
+
+
+name it like London device config
+
+lots of setting categories here you can turn on or off different stuff
+
+like app settings, cellular and bluetooth, cloud printer, display,
+
+lots of different stuff
+
+
+for the pass policy if the device is joined to the domain it will follow that
+and not this
+
+
+turn antivirus on
+
+
+choose your scope tag
+choose your groups
+
+in the availability rule you can choose assign it if the os version was
+a specific version
+
+create
+
+
+
+
+now lets try the settings catalog
+
+this is when everything is here and you can choose whatever you want
+
+again for windows
+
+add the settings this is alot bigger and you can do the same but more options
+
+
+again its like GPO so choose whatever you want.
+
+
+assign it to scope and groups and create
+
+
+========================================================
+
+Troubleshooting and monitoring configuration profile
+
+
+
+
+Devices / configuration profile / choose your profile 
+
+
+you can see if there is any problem there and get reports there
+
+
+MAKE SURE YOU HAVE THE LICESE
+
+in the troubleshooting + support in the troubleshoot part
+
+choose your user and check it there
+
+
+========================================================
+
+Windows Kiosk mode with intune
+
+First create a group
+
+security group ofcourse
+
+and the devices you want
+
+go to devices / configuration profile
+
+create select windows 10 or later
+template
+choose kiosk
+
+name it 
+select kiosk mode (signle app or multi app)
+
+
+you can choose a local user and make it auto login
+(you have to create the local user yourself)
+
+choose whatever you want like browser and cookies and stuff
+
+scope tags as usual
+assignment choose the kiosk group you created
+
+OS version and other stuff too
+
+create
+
+========================================================
+
+Android and ios
+
+device / configuration profile
+
+create 
+name it
+choose android
+device restrictions
+
+choose the stuff you want and done
+
+
+ios same
+
+
+========================================================
+
+Configuration policy for health devices and health monitoring
+
+
+
+
+
+
+Intune admin center
+
+Devices / configuration profiles
+
+create a new profile
+
+windows 10 and later 
+template
+
+choose windows health monitoring
+
+name it
+health monitoring enable
+scope windows update and analytic data
+
+sope tag 
+assignment choose the devices group you want
+
+create
+
+it will take a long time for this to really work it always takes like a day
+
+you can see the results in Reports / Endpoint analytics
+
+
+========================================================
+
+##################################################
+####                                          ####
+####        Updating devices with intune      ####
+####                                          ####
+##################################################
+
+Intune admin center
+
+in devices we have 3 options 
+
+update rings 
+feature update
+quality update 
+
+
+let's start with update rings 
+
+create different groups and use those groups for scheduling
+
+
+so let's go to groups
+create new groups
+
+type = security
+name it like preview update ring
+
+we are using this for our production line so this is the most updated version
+
+type = security
+name it like Limited update ring
+
+less updates we want them to be more stable
+
+another group
+type = security
+name it like Broad update ring most stable
+
+
+go to devices update rings for windows 10 and later 
+
+create a profile
+name it something like preview ring
+
+answer as you need
+
+stuff like microsoft profuct update, driver update, feature update, 
+upgrade win10 to win11
+
+set feature update uninstall period = 60
+active hours of update 
+
+automatic behaviour
+
+answer as you want there
+
+scope tag as usual
+
+assignment now we use the preview group we created
+
+
+
+create another profile in update rings
+
+as you want for limited ones like no driver updates
+or 5 days grace period or time period from 1am to 6am
+
+scope tag as usual
+
+assignment now we use the limited group we created
+
+
+
+
+another profile for Broad ring
+
+again same thing whatever you want as you need.
+
+save.
+
+
+-------------
+
+let's do feature update now
+
+
+
+create your profile and name it like whatever you want
+
+choose your os
+
+choose your rollout option 
+stuff like make available as soon as possible
+or specific date or what ever you want and assign it to whatever group you want
+
+--------------
+
+same for quality update
+
+========================================================
+
+Android updates
+
+
+
+
+https://learn.microsoft.com/en-us/mem/intune/configuration/device-restrictions-android-for-work
+
+
+Devices / Configuration profiles 
+
+create a profile select android Enterprise
+profile type = device restriction
+
+give it a name 
+
+in general you have system update
+
+choose as you need
+
+scope as usual 
+assign the group you want
+
+========================================================
+ios updates
+
+
+
+Devices / ios and ipad os
+
+create a profile
+name it 
+select what you want 
+
+and create it
+
+========================================================
+
+Managing windows update optimization
+
+
+
+
+
+
+Devices / configuration profile 
+
+create a profile
+windows 10 and later
+
+templates
+
+and delivery optimization
+
+
+name it 
+
+choose what you want like download mode
+bandwith
+delay 
+...
+
+assign it
+create it 
+
+done
+
+========================================================
+
+Monitor updates
+
+
+
+
+it's a slow thing but you will get a report eventually
+
+Intune admin center
+
+Reports / Windows update
+
+you can see the stuff here and get reports if you want
+
+========================================================
+
+update troubleshooting
+
+
+
+
+Intune admin center
+
+Reports / Windows update
+
+if you had any errors this is where you can see it
+
+
+you can check each device in device windows and choose the device
+
+make sure its compliace, usually that's the problem
+
+and go check in report and see endpoint analytics
+
+
+
+========================================================
+
+
+##############################################################
+####                                                      ####
+####        Managing endpoint protection with intune      ####
+####                                                      ####
+##############################################################
+
+
+Security base lines to strenght devices
+
+
+
+
+
+stuff like make sure firewall and defender are on and lots of other stuff
+
+in Endpoint security / security baselines
+
+Security baseline for win 10 or later
+
+create a profile
+name it like enforce firewall
+
+change as you want like
+voice activation disable
+
+app runtime not config
+
+application management
+block app installation with elevated privilege not config
+
+block user control over ... not config
+
+
+
+most important one for this case is firewall
+
+change as you want
+like block inbound
+make sure firewall is on
+
+scope, assign and then create
+
+
+
+
+my recommendation everything should be on I don't want anything to be off
+but this is just an example
+
+========================================================
+
+Endpoint security using configuration profile
+
+
+
+
+in intune admin center
+
+Endpoint security / antivirus / create a AV policy
+
+win 10 and later
+
+defender update controls
+
+
+give it name
+
+engine update chanel choose what you want
+platform update channel choose what you want
+security inteligence update  choose what you want
+
+scope, assign, and create 
+
+
+
+Endpoint security / Disk encryption
+
+basically configuring bitlocker for our devices
+
+
+Endpoint security / firewall
+create a policy choose the stuff you want to turn on or off
+
+
+attack surfaace is prety good 
+
+turn on the stuff most of them are nice
+
+
+every other thing here is just like the otherones just read it's very easy
+
+========================================================
+
+Defender for endpoint onboarding
+
+
+
+
+First check if you have the proper license
+
+in microsoft 365 admin center 
+in billing
+search for endpoint you can see them 
+
+check these links and see all the plans and stuff
+
+https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-endpoint
+
+
+you can see all the licensing requirements
+
+
+https://learn.microsoft.com/en-us/defender-endpoint/minimum-requirements
+
+
+after you bought the thing check it in the license part and assign it 
+to your user
+
+it can take a while until it actually works it can be up to 3 hours and maybe more
+
+
+
+go to intune admin center (endpoint.microsoft.com)
+
+in endpoint security 
+
+Microsoft defender for endpoint
+
+configuring microsoft defender security center 
+open the link (security.microsoft.com)
+
+
+this is the part that might take 3 hours
+
+
+in advanced features 
+turrn on Microsoft Intune connection and save it
+
+
+go back to endpoint.microsoft.com
+
+go to endpointsecurity
+
+
+in the Microsoft defender for endpoint
+
+now you can use it
+
+turn on the important stuff
+
+like allow defender to enforce the config
+
+compliance evaluation turn it on for windows 
+
+you can use the app protection here but that's the next part
+
+save it
+
+now we are ready to send out onboard detection
+
+go to endpoint detection and response 
+
+create policy 
+win 10 and later
+endpoint detection profile
+
+
+name it
+
+Microsoft defender for endpoint client config package type = auto from connector
+
+sample sharing = not config
+
+depricated (telemetry reporting) = not config
+
+scope, assign, and create
+
+
+
+========================================================
+
+##############################################################
+####                                                      ####
+####        Deploy and secure apps with intune            ####
+####                                                      ####
+##############################################################
+
+
+Intune admin center (endpoint.microsoft.com)
+
+in allservices / all apps
+
+add choose which apps you want to install and deploy there
+
+you can install the app stores for windows/ios/android/mac, web applications, ...
+
+windows app (win32) (exe files and stuff like that), or mac app (DMG)
+
+
+
+========================================================
+Deploy microsoft 365 apps (office) with intune
+
+
+Apps / Windows apps
+
+add / select/microsoft 365
+
+install for win 10 and later
+
+configuration designer
+
+select which apps you want to install
+
+select license if you have
+
+use shared computer activation yes
+
+accept microsoft license yes
+
+add the languages you want
+
+scope, assign, create
+
+very easy to do it just read the wizard and go with it
+
+
+========================================================
+
+Changing micorosft 365 apps settings using gpo AD (OLD WAY)
+
+First of all the systems must be part of our domain
+
+First you have to donwload the required file (ADMX file )
+
+search this on google : download administrative templates
+
+
+or 
+https://www.microsoft.com/en-us/download/details.aspx?id=49030
+
+
+exteract the files and go to to the admx folder and copy the .admx files
+in the DC, paste in C:\Windows\PolicyDefinition
+
+now go to the exteracted folder and copy the language stuff
+
+extracted folder/admx/en-us
+
+copy the files in the language not the folder
+
+paste them here 
+
+C:\Windows\PolicyDefinition\en-us
+
+or whatever other language it was
+
+
+now in group policy manager you can create a policy 
+
+computer config administrative/microsoft office 
+
+change whatever policy you want there
+
+========================================================
+
+Changing micorosft 365 apps settings using intune
+
+in endpoint.micorosft.com
+
+Apps / Policies for office apps
+
+create a policy, name it
+
+for example enable autosave in word for London
+
+scope / choose what you want usually its This policy config applies to users
+ in the specific group (the other one is for online version of office) 
+and add your group
+
+
+
+policies / user the filter to make it easy (word) 
+
+find the policy you want (allow background save)
+
+create it and done
+
+========================================================
+
+Store app deployment with intune
+
+Apps / Windows / add choose the microsoft store
+
+search the app you want
+
+acrobat reader for example , read the wizard assign it and create.
+
+same thing for ios or other stuff
+
+
+for android when you choose google playstore 
+you have to approve it too same thing just a little different very easy to do
+
+
+========================================================
+
+App protection policies with ios and android devices (very very good feature)
+
+Apps / app protection policies
+
+create one 
+
+name it for example ios app protection settings
+
+Target to apps on all devices you have yes and no option
+you can say no to this and choose on the device type (manage and unmanaged)
+
+unmanaged is personal owned devices
+managed is for company owned devices
+
+if you choose yes means both
+
+Target policy to choose the app you  want
+
+next
+
+        Data protection
+
+backup org data to itunes and icloud (Allow or block what you want)
+
+look at the wizard and change what you want
+
+like require encryption, restrict cut, copy, paste between different appls, ...
+
+Next
+
+        Access requirement
+
+change what you want some cool stuff here
+like select pin number, ...
+
+        Conditional launch
+
+like set sign in requirement, grace period, ...
+
+cools stuff here too
+
+scope, assign, create.
+
+
+almost the same for Android
+
+========================================================
+
+Managing app deployment policies
+
+apps / app protection polocies
+
+select the policy you can go to the properties
+
+lots of stuff to do like add or remove groups and stuff
+
+there is a diagnose and solve problems which is not that good maybe gets good in the future
+
+========================================================
+
+Enforing app protection policies using conditional access
+ (For the apps not supported in the usual way)
+
+
+ Device / conditional access 
+ create a policy
+
+ name it like require app protection
+
+ users and groups add whatever you want
+
+conditions choose the platform like ios or whatever
+
+
+ in Grant you can choose stuff like grant the user if intune app protection app installed
+
+========================================================
+
+Using app configuration polocies
+
+
+https://learn.microsoft.com/en-us/mem/intune/apps/app-configuration-policies-overview
+
+
+The application must support this, basically its gonna be xml stuff and they will
+be implemented on the device
+
+in intune
+
+apps / app configuration policies
+
+add / choose manage devices or managed apps (whatever you want)
+
+name it 
+
+choose your settings, you can search tShem in google microsoft has
+lots of xml stuff for office apps/edge/... ,
+
+scope, assign and create
+
